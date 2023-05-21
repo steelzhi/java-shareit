@@ -20,7 +20,7 @@ public final class Checker {
             }
         }
 
-        throw new UserDoesNotExistException("Пользователь с указанным id не найден.");
+        throw new UserDoesNotExistException("Пользователя с указанным id не существует.");
     }
 
     public static void checkIfUserAndItemExists(Long userId, Long itemDtoId, Map<Long, List<ItemDto>> items) {
@@ -45,7 +45,7 @@ public final class Checker {
         if (id == null) {
             for (User existingUser : users) {
                 if (existingUser.getEmail().equals(email)) {
-                    throw new DuplicateEmailException("Пользователь с таким email уже существует");
+                    throw new DuplicateEmailException("Пользователь с указанным email уже существует.");
                 }
             }
         }
@@ -54,9 +54,8 @@ public final class Checker {
         for (User existingUser : users) {
             if (existingUser.getEmail().equals(email) && existingUser.getId() != id) {
                 throw new DuplicateEmailException(
-                        "Нельзя изменить email на указанный - пользователь с таким email уже существует");
+                        "Нельзя изменить email на указанный - пользователь с таким email уже существует.");
             }
         }
     }
-
 }

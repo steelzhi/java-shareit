@@ -7,15 +7,14 @@ import java.util.List;
 public interface UserRepository {
     List<User> getUsers();
 
-
     User getUser(Long userId);
-
 
     User postUser(User user);
 
-
     User patchUser(Long userId, User user);
 
-
     void deleteUser(Long id);
+
+    //метод, необходимый для unit-тестирования
+    void deleteAllUsers();
 }

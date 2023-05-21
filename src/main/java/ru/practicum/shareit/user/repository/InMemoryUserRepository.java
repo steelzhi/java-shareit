@@ -45,7 +45,7 @@ public class InMemoryUserRepository implements UserRepository {
         if (user.getName() != null) {
             existingUser.setName(user.getName());
         }
-        if(user.getEmail() != null) {
+        if (user.getEmail() != null) {
             existingUser.setEmail(user.getEmail());
         }
 
@@ -55,5 +55,10 @@ public class InMemoryUserRepository implements UserRepository {
     @Override
     public void deleteUser(Long userId) {
         users.remove(userId);
+    }
+
+    @Override
+    public void deleteAllUsers() {
+        users.clear();
     }
 }
