@@ -15,7 +15,7 @@ public final class Checker {
 
     public static void checkIfUserExists(Long userId, List<User> users) {
         for (User user : users) {
-            if (user.getId() == userId) {
+            if (user.getId().equals(userId)) {
                 return;
             }
         }
@@ -30,7 +30,7 @@ public final class Checker {
 
         List<ItemDto> itemsDto = items.get(userId);
         for (ItemDto itemDto : itemsDto) {
-            if (itemDto.getId() == itemDtoId) {
+            if (itemDto.getId().equals(itemDtoId)) {
                 return;
             }
         }
@@ -52,7 +52,7 @@ public final class Checker {
 
         // Проверка совпадения для существующего пользователя (при изменении пользователя)
         for (User existingUser : users) {
-            if (existingUser.getEmail().equals(email) && existingUser.getId() != id) {
+            if (existingUser.getEmail().equals(email) && !existingUser.getId().equals(id)) {
                 throw new DuplicateEmailException(
                         "Нельзя изменить email на указанный - пользователь с таким email уже существует.");
             }

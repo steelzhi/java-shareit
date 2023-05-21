@@ -31,7 +31,7 @@ public class InMemoryItemDtoRepository implements ItemDtoRepository {
         Checker.checkIfUserAndItemExists(userId, itemId, items);
 
         ItemDto existingItemDto = items.get(userId).stream()
-                .filter(item -> item.getId() == itemId)
+                .filter(item -> item.getId().equals(itemId))
                 .findFirst().get();
 
         if (itemDto.getName() != null) {
@@ -50,7 +50,7 @@ public class InMemoryItemDtoRepository implements ItemDtoRepository {
     @Override
     public ItemDto getItemDto(Long itemId) {
         for (ItemDto itemDto : getAllItemsDto()) {
-            if (itemDto.getId() == itemId) {
+            if (itemDto.getId().equals(itemId)) {
                 return itemDto;
             }
         }
