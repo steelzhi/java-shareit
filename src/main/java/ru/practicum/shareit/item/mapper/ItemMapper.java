@@ -16,5 +16,4 @@ public class ItemMapper {
                 item.getRequest()
         );
     }
-
 }

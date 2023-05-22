@@ -13,6 +13,7 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.InMemoryUserRepository;
 import ru.practicum.shareit.user.repository.UserRepository;
 import ru.practicum.shareit.user.service.UserService;
+import ru.practicum.shareit.user.service.UserServiceImpl;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -25,11 +26,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ItemTests {
     UserRepository userRepository = new InMemoryUserRepository();
-    UserService userService = new UserService(userRepository);
+    UserService userService = new UserServiceImpl(userRepository);
 
     ItemDtoRepository itemDtoRepository = new InMemoryItemDtoRepository();
-    ItemService itemService = new ItemServiceImpl(itemDtoRepository);
-    ItemController itemController = new ItemController(itemService, userService);
+    ItemService itemService = new ItemServiceImpl(itemDtoRepository, userRepository);
+    ItemController itemController = new ItemController(itemService);
 
     static Validator validator;
 

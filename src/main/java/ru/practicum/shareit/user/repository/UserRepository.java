@@ -13,8 +13,7 @@ public interface UserRepository {
 
     User patchUser(Long userId, User user);
 
-    void deleteUser(Long id);
+    void deleteUser(Long userId);
 
-    //метод, необходимый для unit-тестирования
     void deleteAllUsers();
 }

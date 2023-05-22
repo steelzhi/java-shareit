@@ -1,34 +1,19 @@
 package ru.practicum.shareit.user.service;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.List;
 
-@Service
-@RequiredArgsConstructor
-public class UserService {
-    private final UserRepository userRepository;
+public interface UserService {
+    List<User> getUsers();
 
-    public List<User> getUsers() {
-        return userRepository.getUsers();
-    }
+    User getUser(Long userId);
 
-    public User getUser(Long userId) {
-        return userRepository.getUser(userId);
-    }
+    User postUser(User user);
 
-    public User postUser(User user) {
-        return userRepository.postUser(user);
-    }
+    User patchUser(Long id, User user);
 
-    public User patchUser(Long userId, User user) {
-        return userRepository.patchUser(userId, user);
-    }
+    void deleteUser(Long userId);
 
-    public void deleteUser(Long userId) {
-        userRepository.deleteUser(userId);
-    }
+    void checkIfEmailIsDuplicate(Long id, User user, List<User> users);
 }

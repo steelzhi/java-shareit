@@ -4,7 +4,6 @@ import org.springframework.stereotype.Repository;
 import ru.practicum.shareit.exception.ItemDtoDoesNotExistException;
 import ru.practicum.shareit.exception.UserDoesNotExistException;
 import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.utility.Checker;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,27 +12,22 @@ import java.util.Map;
 
 @Repository
 public class InMemoryItemDtoRepository implements ItemDtoRepository {
-    private final Map<Long, List<ItemDto>> items = new HashMap<>();
+    private final Map<Long, Map<Long, ItemDto>> items = new HashMap<>();
     private static Long itemId = 1L;
 
     @Override
     public ItemDto postItemDto(ItemDto itemDto, Long userId) {
         itemDto.setId(itemId++);
         if (!items.containsKey(userId)) {
-            items.put(userId, new ArrayList<>());
+            items.put(userId, new HashMap<>());
         }
-        items.get(userId).add(itemDto);
+        items.get(userId).put(itemDto.getId(), itemDto);
         return itemDto;
     }
 
     @Override
     public ItemDto patchItemDto(Long itemId, ItemDto itemDto, Long userId) {
-        Checker.checkIfUserAndItemExists(userId, itemId, items);
-
-        ItemDto existingItemDto = items.get(userId).stream()
-                .filter(item -> item.getId().equals(itemId))
-                .findFirst().get();
-
+        ItemDto existingItemDto = items.get(userId).get(itemId);
         if (itemDto.getName() != null) {
             existingItemDto.setName(itemDto.getName());
         }
@@ -49,30 +43,34 @@ public class InMemoryItemDtoRepository implements ItemDtoRepository {
 
     @Override
     public ItemDto getItemDto(Long itemId) {
-        for (ItemDto itemDto : getAllItemsDto()) {
-            if (itemDto.getId().equals(itemId)) {
-                return itemDto;
-            }
+        if (!getAllItemsDto().containsKey(itemId)) {
+            throw new ItemDtoDoesNotExistException("Вещи с указанным id не существует.");
         }
 
-        throw new ItemDtoDoesNotExistException("Вещи с указанным id не существует.");
+        return getAllItemsDto().get(itemId);
     }
 
     @Override
     public List<ItemDto> getAllItemsDtoByUser(Long userId) {
-        if (items.containsKey(userId)) {
-            return items.get(userId);
+        if (!items.containsKey(userId)) {
+            throw new UserDoesNotExistException("Пользователя с указанным id не существует.");
         }
 
-        throw new UserDoesNotExistException("Пользователя с указанным id не существует.");
+        List<ItemDto> allItemsDtoByUser = new ArrayList<>(items.get(userId).values());
+        return allItemsDtoByUser;
     }
 
     @Override
-    public List<ItemDto> getAllItemsDto() {
-        List<ItemDto> allItemsDto = new ArrayList<>();
+    public Map<Long, ItemDto> getAllItemsDto() {
+        Map<Long, ItemDto> allItemsDto = new HashMap<>();
         for (Long userId : items.keySet()) {
-            allItemsDto.addAll(items.get(userId));
+            allItemsDto.putAll(items.get(userId));
         }
         return allItemsDto;
+    }
+
+    @Override
+    public Map<Long, Map<Long, ItemDto>> getAllItemsDtoWithUsersIds() {
+        return items;
     }
 }
