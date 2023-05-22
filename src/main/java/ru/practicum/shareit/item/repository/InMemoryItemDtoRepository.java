@@ -19,7 +19,7 @@ public class InMemoryItemDtoRepository implements ItemDtoRepository {
     @Override
     public ItemDto postItemDto(ItemDto itemDto, Long userId) {
         itemDto.setId(itemId++);
-        if (items.get(userId) == null) {
+        if (!items.containsKey(userId)) {
             items.put(userId, new ArrayList<>());
         }
         items.get(userId).add(itemDto);
