@@ -15,29 +15,31 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<User> getUsers() {
-        return userRepository.getUsers();
+        return userRepository.findAll();
     }
 
     @Override
     public User getUser(Long userId) {
-        return userRepository.getUser(userId);
+        return userRepository.getReferenceById(userId);
     }
 
     @Override
     public User postUser(User user) {
         checkIfEmailIsDuplicate(null, user, getUsers());
-        return userRepository.postUser(user);
+        return userRepository.save(user);
     }
 
     @Override
     public User patchUser(Long id, User user) {
         checkIfEmailIsDuplicate(id, user, getUsers());
-        return userRepository.patchUser(id, user);
+        User userWithNonNullFields = getUserForUpdateWithNonNullFields(getUser(id), user);
+        userRepository.patchUser(id, userWithNonNullFields.getName(), userWithNonNullFields.getEmail());
+        return userWithNonNullFields;
     }
 
     @Override
     public void deleteUser(Long userId) {
-        userRepository.deleteUser(userId);
+        userRepository.deleteAllByIdInBatch(List.of(userId));
     }
 
     @Override
@@ -60,5 +62,16 @@ public class UserServiceImpl implements UserService {
                         "Нельзя изменить email на указанный - пользователь с таким email уже существует.");
             }
         }
+    }
+
+    public User getUserForUpdateWithNonNullFields(User existingUser, User updatedUser) {
+        if (updatedUser.getName() == null) {
+            updatedUser.setName(existingUser.getName());
+        }
+        if (updatedUser.getEmail() == null) {
+            updatedUser.setEmail(existingUser.getEmail());
+        }
+        updatedUser.setId(existingUser.getId());
+        return updatedUser;
     }
 }

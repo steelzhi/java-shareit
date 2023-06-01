@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/*
 @Repository
 public class InMemoryUserRepository implements UserRepository {
     private final Map<Long, User> users = new HashMap<>();
@@ -61,4 +62,4 @@ public class InMemoryUserRepository implements UserRepository {
     public void deleteAllUsers() {
         users.clear();
     }
-}
+}*/

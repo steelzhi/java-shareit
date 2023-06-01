@@ -22,7 +22,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto postItemDto(ItemDto itemDto, Long userId) {
-        checkIfUserExists(userId, userRepository.getUsers());
+        checkIfUserExists(userId, userRepository.findAll());
         return itemRepository.postItemDto(itemDto, userId);
     }
 
@@ -40,7 +40,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public List<ItemDto> getAllItemsDtoByUser(Long userId) {
-        checkIfUserExists(userId, userRepository.getUsers());
+        checkIfUserExists(userId, userRepository.findAll());
         return itemRepository.getAllItemsDtoByUser(userId);
     }
 

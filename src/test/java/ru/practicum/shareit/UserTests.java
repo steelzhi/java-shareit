@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import ru.practicum.shareit.exception.DuplicateEmailException;
 import ru.practicum.shareit.user.controller.UserController;
 import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.repository.InMemoryUserRepository;
 import ru.practicum.shareit.user.repository.UserRepository;
 import ru.practicum.shareit.user.service.UserService;
 import ru.practicum.shareit.user.service.UserServiceImpl;
@@ -21,7 +20,8 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class UserTests {
-    UserRepository userRepository = new InMemoryUserRepository();
+    //UserRepository userRepository = new InMemoryUserRepository();
+    UserRepository userRepository;
     UserService userService = new UserServiceImpl(userRepository);
     UserController userController = new UserController(userService);
     static Validator validator;

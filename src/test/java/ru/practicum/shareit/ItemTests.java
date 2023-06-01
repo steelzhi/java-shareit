@@ -2,6 +2,7 @@ package ru.practicum.shareit;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import ru.practicum.shareit.exception.UserDoesNotExistException;
 import ru.practicum.shareit.item.controller.ItemController;
 import ru.practicum.shareit.item.dto.ItemDto;
@@ -10,7 +11,6 @@ import ru.practicum.shareit.item.repository.ItemDtoRepository;
 import ru.practicum.shareit.item.service.ItemService;
 import ru.practicum.shareit.item.service.ItemServiceImpl;
 import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.repository.InMemoryUserRepository;
 import ru.practicum.shareit.user.repository.UserRepository;
 import ru.practicum.shareit.user.service.UserService;
 import ru.practicum.shareit.user.service.UserServiceImpl;
@@ -25,7 +25,8 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ItemTests {
-    UserRepository userRepository = new InMemoryUserRepository();
+    //UserRepository userRepository = new InMemoryUserRepository();
+    UserRepository userRepository;
     UserService userService = new UserServiceImpl(userRepository);
 
     ItemDtoRepository itemDtoRepository = new InMemoryItemDtoRepository();
