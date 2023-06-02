@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.ItemDtoDoesNotExistException;
 import ru.practicum.shareit.exception.UserDoesNotExistException;
+import ru.practicum.shareit.exception.UserDoesNotExistOrDoesNotHaveAnyItemsException;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.repository.ItemDtoRepository;
 import ru.practicum.shareit.user.model.User;
@@ -11,7 +12,6 @@ import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -23,25 +23,58 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDto postItemDto(ItemDto itemDto, Long userId) {
         checkIfUserExists(userId, userRepository.findAll());
-        return itemRepository.postItemDto(itemDto, userId);
+        itemDto.setOwner(userRepository.findById(userId).get());
+        return itemRepository.save(itemDto);
     }
 
     @Override
     public ItemDto patchItemDto(Long itemId, ItemDto itemDto, Long userId) {
-        //checkIfUserExists(userId, userRepository.getUsers());
-        checkIfUserAndItemExists(userId, itemId, itemRepository.getAllItemsDtoWithUsersIds());
-        return itemRepository.patchItemDto(itemId, itemDto, userId);
+        checkIfUserAndItemExists(userId, itemId);
+        ItemDto existingItemDto = getItemDto(itemId);
+        Long ownerId = null;
+        if (itemDto.getOwner() != null) {
+            ownerId = itemDto.getOwner().getId();
+        }
+        itemRepository.patchItemDto(itemId,
+                itemDto.getName(),
+                itemDto.getDescription(),
+                itemDto.getAvailable(),
+                itemDto.getRequest(),
+                ownerId);
+
+        itemDto.setId(itemId);
+        if (itemDto.getName() == null) {
+            itemDto.setName(existingItemDto.getName());
+        }
+        if (itemDto.getDescription() == null) {
+            itemDto.setDescription(existingItemDto.getDescription());
+        }
+        if (itemDto.getAvailable() == null) {
+            itemDto.setAvailable(existingItemDto.getAvailable());
+        }
+        if (itemDto.getRequest() == null) {
+            itemDto.setRequest(existingItemDto.getRequest());
+        }
+        if (itemDto.getOwner() == null) {
+            itemDto.setOwner(existingItemDto.getOwner());
+        }
+        return itemDto;
     }
 
     @Override
     public ItemDto getItemDto(Long itemId) {
-        return itemRepository.getItemDto(itemId);
+        return itemRepository.getReferenceById(itemId);
     }
 
     @Override
     public List<ItemDto> getAllItemsDtoByUser(Long userId) {
         checkIfUserExists(userId, userRepository.findAll());
-        return itemRepository.getAllItemsDtoByUser(userId);
+        try {
+            return itemRepository.findAllByOwnerId(userId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @Override
@@ -49,12 +82,13 @@ public class ItemServiceImpl implements ItemService {
         List<ItemDto> foundBySearch = new ArrayList<>();
 
         if (!text.isBlank()) {
-            foundBySearch = itemRepository.getAllItemsDto().values().stream()
+            foundBySearch = itemRepository.findAll().stream()
                     .filter(itemDto -> itemDto.getName().toLowerCase().contains(text.toLowerCase())
                             || itemDto.getDescription().toLowerCase().contains(text.toLowerCase()))
                     .filter(itemDto -> itemDto.getAvailable() == true)
                     .collect(Collectors.toList());
         }
+
 
         return foundBySearch;
     }
@@ -70,15 +104,18 @@ public class ItemServiceImpl implements ItemService {
         throw new UserDoesNotExistException("Пользователя с указанным id не существует.");
     }
 
-    @Override
-    public void checkIfUserAndItemExists(Long userId, Long itemDtoId, Map<Long, Map<Long, ItemDto>> items) {
-        if (!items.containsKey(userId)) {
-            throw new UserDoesNotExistException("Пользователя с указанным id не существует.");
+    public void checkIfUserAndItemExists(Long userId, Long itemDtoId) {
+        List<ItemDto> userItemsDto = getAllItemsDtoByUser(userId);
+        if (userItemsDto.isEmpty()) {
+            throw new UserDoesNotExistOrDoesNotHaveAnyItemsException(
+                    "Пользователя с указанным id не существует либо пользователь не добавил ни одной вещи.");
+        }
+        for (ItemDto itemDto : userItemsDto) {
+            if (itemDto.getId() == itemDtoId) {
+                return;
+            }
         }
 
-        Map<Long, ItemDto> itemsDto = items.get(userId);
-        if (!itemsDto.containsKey(itemDtoId)) {
-            throw new ItemDtoDoesNotExistException("Вещи с указанным id не существует.");
-        }
+        throw new ItemDtoDoesNotExistException("Вещи с указанным id не существует.");
     }
 }

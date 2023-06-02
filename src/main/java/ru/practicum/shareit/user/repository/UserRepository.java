@@ -19,12 +19,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Transactional
     @Modifying
     @Query("UPDATE User AS u " +
-            "SET u.name = ?2, " +
-            "u.email = ?3 " +
-            "WHERE u.id = ?1"/* +
-            "SELECT u " +
-            "FROM User AS u " +
-            "WHERE u.id = :userId;"*/)
+            "SET u.name = COALESCE(?2, u.name), " +
+            "u.email = COALESCE(?3, u.email) " +
+            "WHERE u.id = ?1")
     int patchUser(Long userId, String name, String email);
 
     //void deleteUser(Long userId);

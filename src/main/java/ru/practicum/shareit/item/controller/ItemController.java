@@ -33,7 +33,7 @@ public class ItemController {
     }
 
     @GetMapping
-    public List<ItemDto> getAllItemsDto(@RequestHeader("X-Sharer-User-Id") Long userId) {
+    public List<ItemDto> findAll(@RequestHeader("X-Sharer-User-Id") Long userId) {
         return itemService.getAllItemsDtoByUser(userId);
     }
 

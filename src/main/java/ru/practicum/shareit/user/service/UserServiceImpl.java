@@ -2,6 +2,8 @@ package ru.practicum.shareit.user.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.DuplicateEmailException;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
@@ -32,12 +34,20 @@ public class UserServiceImpl implements UserService {
     @Override
     public User patchUser(Long id, User user) {
         checkIfEmailIsDuplicate(id, user, getUsers());
-        User userWithNonNullFields = getUserForUpdateWithNonNullFields(getUser(id), user);
-        userRepository.patchUser(id, userWithNonNullFields.getName(), userWithNonNullFields.getEmail());
-        return userWithNonNullFields;
+        User existingUser = getUser(id);
+        userRepository.patchUser(id, user.getName(), user.getEmail());
+        user.setId(id);
+        if (user.getName() == null) {
+            user.setName(existingUser.getName());
+        }
+        if (user.getEmail() == null) {
+            user.setEmail(existingUser.getEmail());
+        }
+        return user;
     }
 
     @Override
+    @Transactional
     public void deleteUser(Long userId) {
         userRepository.deleteAllByIdInBatch(List.of(userId));
     }
@@ -62,16 +72,5 @@ public class UserServiceImpl implements UserService {
                         "Нельзя изменить email на указанный - пользователь с таким email уже существует.");
             }
         }
-    }
-
-    public User getUserForUpdateWithNonNullFields(User existingUser, User updatedUser) {
-        if (updatedUser.getName() == null) {
-            updatedUser.setName(existingUser.getName());
-        }
-        if (updatedUser.getEmail() == null) {
-            updatedUser.setEmail(existingUser.getEmail());
-        }
-        updatedUser.setId(existingUser.getId());
-        return updatedUser;
     }
 }

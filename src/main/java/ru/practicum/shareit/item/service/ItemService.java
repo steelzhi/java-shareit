@@ -22,5 +22,5 @@ public interface ItemService {
 
     void checkIfUserExists(Long userId, List<User> users);
 
-    void checkIfUserAndItemExists(Long userId, Long itemDtoId, Map<Long, Map<Long, ItemDto>> items);
+    void checkIfUserAndItemExists(Long userId, Long itemDtoId);
 }

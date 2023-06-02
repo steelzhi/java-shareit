@@ -16,6 +16,13 @@ public class ErrorHandler {
 
     @ExceptionHandler()
     @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleUserNotFound(final UserDoesNotExistOrDoesNotHaveAnyItemsException e) {
+        return new ErrorResponse("Пользователь не найден либо у пользователя не добавлено ни одной вещи",
+                e.getMessage());
+    }
+
+    @ExceptionHandler()
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleItemNotFound(final ItemDtoDoesNotExistException e) {
         return new ErrorResponse("Вещь не найдена", e.getMessage());
     }

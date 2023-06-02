@@ -27,7 +27,12 @@ CREATE TABLE IF NOT EXISTS feedbacks (
 
 CREATE TABLE IF NOT EXISTS bookings (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY NOT NULL,
-    status VARCHAR(30)
+    item_id BIGINT NOT NULL,
+    start_time TIMESTAMP NOT NULL,
+    end_time TIMESTAMP NOT NULL,
+    status VARCHAR(30),
+    CONSTRAINT booking_item FOREIGN KEY (item_id) REFERENCES items(id)
 );
 
 INSERT INTO users (name, email) VALUES ('aaa', 'bb@cc.dd');
+INSERT INTO items (name, description, is_available, user_id) VALUES ('Дрель', 'Простая дрель', 'true', 1);

@@ -2,11 +2,9 @@ package ru.practicum.shareit;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import ru.practicum.shareit.exception.UserDoesNotExistException;
 import ru.practicum.shareit.item.controller.ItemController;
 import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.repository.InMemoryItemDtoRepository;
 import ru.practicum.shareit.item.repository.ItemDtoRepository;
 import ru.practicum.shareit.item.service.ItemService;
 import ru.practicum.shareit.item.service.ItemServiceImpl;
@@ -29,7 +27,8 @@ public class ItemTests {
     UserRepository userRepository;
     UserService userService = new UserServiceImpl(userRepository);
 
-    ItemDtoRepository itemDtoRepository = new InMemoryItemDtoRepository();
+    //ItemDtoRepository itemDtoRepository = new InMemoryItemDtoRepository();
+    ItemDtoRepository itemDtoRepository;
     ItemService itemService = new ItemServiceImpl(itemDtoRepository, userRepository);
     ItemController itemController = new ItemController(itemService);
 
@@ -96,16 +95,16 @@ public class ItemTests {
         Long user1Id = userService.postUser(user1).getId();
 
         ItemDto itemDto1 = new ItemDto(null, "Дрель", "Дрель-шуруповерт электрический",
-                true, null);
+                true, null, null);
         ItemDto itemDto2 = new ItemDto(null, "УШМ", "Углошлифовальная машина с плавным пуском",
-                false, null);
+                false, null, null);
         ItemDto itemDto1FromList = itemController.postItemDto(itemDto1, user1Id);
         ItemDto itemDto2FromList = itemController.postItemDto(itemDto2, user1Id);
 
-        assertTrue(itemController.getAllItemsDto(user1Id).size() == 2,
+        assertTrue(itemController.findAll(user1Id).size() == 2,
                 "Количество добавленных пользователем с id = " + user1Id + " в списке не совпадает с " +
                         "фактическим количеством добавленных этим пользователем вещей.");
-        assertEquals(itemController.getAllItemsDto(user1Id), List.of(itemDto1FromList, itemDto2FromList), "" +
+        assertEquals(itemController.findAll(user1Id), List.of(itemDto1FromList, itemDto2FromList), "" +
                 "Список добавленных пользователем с id = " + user1Id + " вещей не совпадает с " +
                 "фактически добавленными этим пользователем вещами.");
     }
@@ -115,7 +114,7 @@ public class ItemTests {
         Long user1Id = 10L;
 
         ItemDto itemDto1 = new ItemDto(null, "Дрель", "Дрель-шуруповерт электрический",
-                true, null);
+                true, null, null);
 
         UserDoesNotExistException userDoesNotExistException = assertThrows(UserDoesNotExistException.class,
                 () -> itemController.postItemDto(itemDto1, user1Id));
@@ -131,9 +130,9 @@ public class ItemTests {
         Long user1Id = userService.postUser(user1).getId();
 
         ItemDto itemDto1 = new ItemDto(null, "Дрель", "Дрель-шуруповерт электрический",
-                true, null);
+                true, null, null);
         ItemDto itemDto2 = new ItemDto(null, "УШМ", "Углошлифовальная машина с плавным пуском",
-                false, null);
+                false, null, null);
         ItemDto itemDto1FromList = itemController.postItemDto(itemDto1, user1Id);
         ItemDto itemDto2FromList = itemController.postItemDto(itemDto2, user1Id);
 
@@ -147,15 +146,15 @@ public class ItemTests {
         Long user1Id = userService.postUser(user1).getId();
 
         ItemDto itemDto1 = new ItemDto(null, "Дрель", "Дрель-шуруповерт электрический",
-                true, null);
+                true, null, null);
         ItemDto itemDto1FromList = itemController.postItemDto(itemDto1, user1Id);
 
         ItemDto updatedItemDto1 = new ItemDto(itemDto1FromList.getId(), "Дрель-шуруповерт",
                 "Шуруповерт электрический DeWalt",
-                false, null);
+                false, null, null);
         itemController.patchItemDto(itemDto1FromList.getId(), updatedItemDto1, user1Id);
 
-        assertTrue(itemController.getAllItemsDto(user1Id).size() == 1,
+        assertTrue(itemController.findAll(user1Id).size() == 1,
                 "После изменения количество вещей изменилось");
         assertEquals(itemController.getItemDto(itemDto1FromList.getId()), updatedItemDto1,
                 "Обновленная вещь в списке не совпадает с фактически обновленной вещью");
@@ -167,11 +166,11 @@ public class ItemTests {
         Long user1Id = userService.postUser(user1).getId();
 
         ItemDto itemDto1 = new ItemDto(null, "Дрель", "Дрель-шуруповерт электрический",
-                true, null);
+                true, null, null);
         ItemDto itemDto2 = new ItemDto(null, "УШМ",
-                "Углошлифовальная Makita машина с плавным пуском", false, null);
+                "Углошлифовальная Makita машина с плавным пуском", false, null, null);
         ItemDto itemDto3 = new ItemDto(null, "УШМ",
-                "Углошлифовальная DeWalt машина с плавным пуском", true, null);
+                "Углошлифовальная DeWalt машина с плавным пуском", true, null, null);
         itemController.postItemDto(itemDto1, user1Id);
         itemController.postItemDto(itemDto2, user1Id);
         itemController.postItemDto(itemDto3, user1Id);

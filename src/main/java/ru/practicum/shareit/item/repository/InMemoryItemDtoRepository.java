@@ -1,3 +1,4 @@
+/*
 package ru.practicum.shareit.item.repository;
 
 import org.springframework.stereotype.Repository;
@@ -73,4 +74,4 @@ public class InMemoryItemDtoRepository implements ItemDtoRepository {
     public Map<Long, Map<Long, ItemDto>> getAllItemsDtoWithUsersIds() {
         return items;
     }
-}
+}*/
