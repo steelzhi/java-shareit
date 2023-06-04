@@ -10,20 +10,33 @@ public class ErrorHandler {
 
     @ExceptionHandler()
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleUserNotFound(final UserDoesNotExistException e) {
+    public ErrorResponse handleUserDoesNotExist(final UserDoesNotExistException e) {
         return new ErrorResponse("Пользователь не найден", e.getMessage());
     }
 
     @ExceptionHandler()
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleUserNotFound(final UserDoesNotExistOrDoesNotHaveAnyItemsException e) {
+    public ErrorResponse handleUserDoesNotExistOrDoesNotHaveAnyItems(
+            final UserDoesNotExistOrDoesNotHaveAnyItemsException e) {
         return new ErrorResponse("Пользователь не найден либо у пользователя не добавлено ни одной вещи",
                 e.getMessage());
+    }
+
+    @ExceptionHandler()
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleItemNotAvailable(final ItemNotAvailableException e) {
+        return new ErrorResponse("Вещь занята", e.getMessage());
     }
 
     @ExceptionHandler()
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleItemNotFound(final ItemDtoDoesNotExistException e) {
         return new ErrorResponse("Вещь не найдена", e.getMessage());
+    }
+
+    @ExceptionHandler()
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleItemIncorrectDate(final IncorrectDateException e) {
+        return new ErrorResponse("Некорректная дата аренды", e.getMessage());
     }
 }

@@ -63,7 +63,14 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto getItemDto(Long itemId) {
-        return itemRepository.getReferenceById(itemId);
+        List<ItemDto> itemDtos = itemRepository.findAll();
+        for (ItemDto itemDto : itemDtos) {
+            if (itemDto.getId() == itemId) {
+                return itemDto;
+            }
+        }
+
+        throw new ItemDtoDoesNotExistException("Вещи с id = " + itemId + " не существует.");
     }
 
     @Override

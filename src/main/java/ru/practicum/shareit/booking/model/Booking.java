@@ -1,47 +1,46 @@
 package ru.practicum.shareit.booking.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.practicum.shareit.booking.status.BookingStatus;
 import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
-/**
- * TODO Sprint add-bookings.
- */
-
+@AllArgsConstructor
 @Data
-@Builder
 @Entity
 @Table(name = "bookings")
 @NoArgsConstructor
-@AllArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer"})
 public class Booking {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @JoinColumn(name = "item_id")
-    @NotNull
-    @ManyToOne
-    private ItemDto itemDto;
-
-    @Column(name = "start_time")
-    @NotNull
+    @Column(name = "start_date")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime start;
 
-    @Column(name = "end_time")
-    @NotNull
+    @Column(name = "end_date")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime end;
 
-    @Enumerated
-    @NotNull
+    @JoinColumn(name = "item_id")
+    @ManyToOne
+    private ItemDto item;
+
+    @JoinColumn(name = "booker_id")
+    @ManyToOne
+    private User booker;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
     private BookingStatus status;
 }

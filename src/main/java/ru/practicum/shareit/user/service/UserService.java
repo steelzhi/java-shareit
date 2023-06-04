@@ -14,6 +14,4 @@ public interface UserService {
     User patchUser(Long id, User user);
 
     void deleteUser(Long userId);
-
-    void checkIfEmailIsDuplicate(Long id, User user, List<User> users);
 }
