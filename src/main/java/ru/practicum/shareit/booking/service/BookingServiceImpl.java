@@ -16,6 +16,8 @@ import ru.practicum.shareit.user.repository.UserRepository;
 
 import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -54,25 +56,70 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<Booking> getAllBookingsByUser(Long userId, BookingStatus bookingStatus) {
+    public List<Booking> getAllBookingsByUser(Long userId, String bookingStatus) {
         checkIfUserExists(userId);
-        if (bookingStatus == null || bookingStatus == BookingStatus.APPROVED
-                || bookingStatus == BookingStatus.CANCELED) {
-            bookingStatus = BookingStatus.ALL;
-        }
 
-        List<Booking> userBookings =
-                bookingRepository.getAllBookingsByBooker_IdAndStatusIn(userId, bookingStatusNamesForBookers(bookingStatus));
-        System.out.println(bookingStatusNamesForBookers(bookingStatus));
-        return getBookingSortedByDateTime(userBookings);
+        List<Booking> userBookings = bookingRepository.getAllBookingsByBooker_Id(userId);
+        return getBookingsWithDemandedStatus(userBookings, bookingStatus);
     }
 
     @Override
-    public List<Booking> getAllBookingsForUserItems(Long userId, BookingStatus bookingStatus) {
-        User user = getUserIfHeHasEvenOneItem(userId);
+    public List<Booking> getAllBookingsForUserItems(Long userId, String bookingStatus) {
+        checkIfUserExists(userId);
+
         List<Booking> itemBookings =
-                bookingRepository.getAllBookingsByBooker_IdAndStatusIn(userId, bookingStatusNamesForItems(bookingStatus));
-        return getBookingSortedByDateTime(itemBookings);
+                bookingRepository.getAllBookingsForUserItems(userId); // Здесь должен быть другой метод, а getAllBookingsForUserItems
+        return getBookingsWithDemandedStatus(itemBookings, bookingStatus);
+    }
+
+    private List<Booking> getBookingsWithDemandedStatus(List<Booking> bookings, String bookingStatus) {
+        List<Booking> userBookingsWithDemandedStatus = new ArrayList<>();
+        LocalDateTime now = LocalDateTime.now().minusSeconds(5);
+        if (bookingStatus == null) {
+            bookingStatus = "ALL";
+        }
+
+        try {
+            BookingStatus.valueOf(bookingStatus);
+        } catch (IllegalArgumentException e) {
+            throw new WrongBookingStatusException("Введен некорректный статус бронирования");
+        }
+
+        for (Booking booking : bookings) {
+            switch (bookingStatus) {
+                case "CURRENT":
+                    if (booking.getStart().isBefore(now) && booking.getEnd().isAfter(now)) {
+                        userBookingsWithDemandedStatus.add(booking);
+                    }
+                    break;
+                case "PAST":
+                    if (booking.getEnd().isBefore(now)) {
+                        userBookingsWithDemandedStatus.add(booking);
+                    }
+                    break;
+                case "FUTURE":
+                    if (booking.getStart().isAfter(now)) {
+                        userBookingsWithDemandedStatus.add(booking);
+                    }
+                    break;
+                case "WAITING":
+                    if (booking.getStatus() == BookingStatus.WAITING) {
+                        userBookingsWithDemandedStatus.add(booking);
+                    }
+                    break;
+                case "REJECTED":
+                    if (booking.getStatus() == BookingStatus.REJECTED) {
+                        userBookingsWithDemandedStatus.add(booking);
+                    }
+                    break;
+                case "ALL":
+                    userBookingsWithDemandedStatus.add(booking);
+                    break;
+                default:
+                    throw new WrongBookingStatusException("Введен некорректный статус бронирования");
+            }
+        }
+        return getBookingSortedByDateTime(userBookingsWithDemandedStatus);
     }
 
     private User getUserIfHeHasEvenOneItem(Long userId) {

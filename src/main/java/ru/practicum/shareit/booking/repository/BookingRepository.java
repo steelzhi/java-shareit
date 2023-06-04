@@ -20,13 +20,22 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "FROM bookings AS b " +
             "WHERE b.id = ?1 " +
             "AND b.status IN ?2", nativeQuery = true)*/
-    List<Booking> getAllBookingsByBooker_IdAndStatusIn(Long bookerId, List<BookingStatus> bookingStatusNamesForBookers);
+    //List<Booking> getAllBookingsByBooker_IdAndStatusIn(Long bookerId, List<BookingStatus> bookingStatusNamesForBookers);
 
-    @Query(value = "SELECT b " +
+    List<Booking> getAllBookingsByBooker_Id(Long bookerId);
+
+
+    /*    @Query(value = "SELECT b " +
+                "FROM bookings AS b " +
+                "JOIN items AS i ON i.id = b.item_id " +
+                "JOIN users AS u ON u.id = i.user_id " +
+                "WHERE u.id = ?1 " +
+                "AND i.status IN ?2", nativeQuery = true)
+        List<Booking> getAllBookingsForUserItems(Long userId, List<String> bookingStatusNamesForItems);*/
+    @Query(value = "SELECT * " +
             "FROM bookings AS b " +
             "JOIN items AS i ON i.id = b.item_id " +
             "JOIN users AS u ON u.id = i.user_id " +
-            "WHERE u.id = ?1 " +
-            "AND i.status IN ?2", nativeQuery = true)
-    List<Booking> getAllBookingsForUserItems(Long userId, List<String> bookingStatusNamesForItems);
+            "WHERE u.id = ?1", nativeQuery = true)
+    List<Booking> getAllBookingsForUserItems(Long id);
 }

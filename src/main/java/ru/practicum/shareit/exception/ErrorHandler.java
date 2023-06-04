@@ -39,4 +39,10 @@ public class ErrorHandler {
     public ErrorResponse handleItemIncorrectDate(final IncorrectDateException e) {
         return new ErrorResponse("Некорректная дата аренды", e.getMessage());
     }
+
+    @ExceptionHandler()
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleWrongBookingStatus(final WrongBookingStatusException e) {
+        return new ErrorResponse("Unknown state: UNSUPPORTED_STATUS", e.getMessage());
+    }
 }
