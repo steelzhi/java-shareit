@@ -1,11 +1,10 @@
-package ru.practicum.shareit.comments.model;
+package ru.practicum.shareit.item.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
@@ -23,19 +22,20 @@ import java.time.LocalDateTime;
 public class Comment {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
     @Column(name = "text")
     private String text;
 
     @NotNull
     @JoinColumn(name = "item_id")
+    @ManyToOne
     private Item item;
 
     @NotNull
     @JoinColumn(name = "author_id")
+    @ManyToOne
     private User author;
 
     @NotNull

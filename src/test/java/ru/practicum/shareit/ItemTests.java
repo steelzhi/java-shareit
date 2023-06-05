@@ -6,6 +6,7 @@ import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exception.UserDoesNotExistException;
 import ru.practicum.shareit.item.controller.ItemController;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.item.service.ItemService;
 import ru.practicum.shareit.item.service.ItemServiceImpl;
@@ -31,7 +32,8 @@ public class ItemTests {
     //ItemDtoRepository itemDtoRepository = new InMemoryItemDtoRepository();
     ItemRepository itemDtoRepository;
     BookingRepository bookingRepository;
-    ItemService itemService = new ItemServiceImpl(itemDtoRepository, userRepository, bookingRepository);
+    CommentRepository commentRepository;
+    ItemService itemService = new ItemServiceImpl(itemDtoRepository, userRepository, bookingRepository, commentRepository);
     ItemController itemController = new ItemController(itemService);
 
     static Validator validator;

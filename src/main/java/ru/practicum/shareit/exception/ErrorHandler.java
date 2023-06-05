@@ -69,4 +69,16 @@ public class ErrorHandler {
     public ErrorResponse handleIllegalBookingAttempt(final IllegalBookingAttemptException e) {
         return new ErrorResponse("Владелец вещи не может бронировать свою вещь", e.getMessage());
     }
+
+    @ExceptionHandler()
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handlePostCommentProhibited(final PostCommentProhibitedException e) {
+        return new ErrorResponse("Вы не можете оставить комментарий к этой вещи", e.getMessage());
+    }
+
+    @ExceptionHandler()
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleEmptyComment(final EmptyCommentException e) {
+        return new ErrorResponse("Комментарий не может быть пустым", e.getMessage());
+    }
 }
