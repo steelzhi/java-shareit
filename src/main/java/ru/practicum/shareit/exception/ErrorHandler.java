@@ -30,7 +30,7 @@ public class ErrorHandler {
 
     @ExceptionHandler()
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleItemNotFound(final ItemDtoDoesNotExistException e) {
+    public ErrorResponse handleItemNotFound(final ItemDoesNotExistException e) {
         return new ErrorResponse("Вещь не найдена", e.getMessage());
     }
 
@@ -44,5 +44,29 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleWrongBookingStatus(final WrongBookingStatusException e) {
         return new ErrorResponse("Unknown state: UNSUPPORTED_STATUS", e.getMessage());
+    }
+
+    @ExceptionHandler()
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleBookingDoesNotExist(final BookingDoesNotExistException e) {
+        return new ErrorResponse("Бронирование не найдено", e.getMessage());
+    }
+
+    @ExceptionHandler()
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleIllegalAccess(final IllegalAccessException e) {
+        return new ErrorResponse("Вы не имеете прав на просмотр этого бронирования", e.getMessage());
+    }
+
+    @ExceptionHandler()
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleDuplicateStatus(final DuplicateStatusException e) {
+        return new ErrorResponse("Данный статус уже установлен", e.getMessage());
+    }
+
+    @ExceptionHandler()
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleIllegalBookingAttempt(final IllegalBookingAttemptException e) {
+        return new ErrorResponse("Владелец вещи не может бронировать свою вещь", e.getMessage());
     }
 }

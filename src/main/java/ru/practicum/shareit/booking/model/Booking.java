@@ -6,7 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.practicum.shareit.booking.status.BookingStatus;
-import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
@@ -34,7 +34,7 @@ public class Booking {
 
     @JoinColumn(name = "item_id")
     @ManyToOne
-    private ItemDto item;
+    private Item item;
 
     @JoinColumn(name = "booker_id")
     @ManyToOne

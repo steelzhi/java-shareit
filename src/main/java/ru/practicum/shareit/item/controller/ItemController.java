@@ -2,7 +2,8 @@ package ru.practicum.shareit.item.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemDtoForOwner;
+import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.service.ItemService;
 
 import javax.validation.Valid;
@@ -16,29 +17,30 @@ public class ItemController {
     private final ItemService itemService;
 
     @PostMapping
-    public ItemDto postItemDto(@Valid @RequestBody ItemDto itemDto, @RequestHeader("X-Sharer-User-Id") Long userId) {
-        return itemService.postItemDto(itemDto, userId);
+    public Item postItem(@Valid @RequestBody Item item, @RequestHeader("X-Sharer-User-Id") Long userId) {
+        return itemService.postItemDto(item, userId);
     }
 
     @PatchMapping("/{itemId}")
-    public ItemDto patchItemDto(@PathVariable Long itemId,
-                                @RequestBody ItemDto itemDto,
-                                @RequestHeader("X-Sharer-User-Id") Long userId) {
-        return itemService.patchItemDto(itemId, itemDto, userId);
+    public Item patchItem(@PathVariable Long itemId,
+                          @RequestBody Item item,
+                          @RequestHeader("X-Sharer-User-Id") Long userId) {
+        return itemService.patchItemDto(itemId, item, userId);
     }
 
     @GetMapping("/{itemId}")
-    public ItemDto getItemDto(@PathVariable Long itemId) {
-        return itemService.getItemDto(itemId);
+    public ItemDtoForOwner getItemDtoById(@PathVariable Long itemId,
+                                          @RequestHeader("X-Sharer-User-Id") Long userId) {
+        return itemService.getItemDtoById(itemId, userId);
     }
 
     @GetMapping
-    public List<ItemDto> findAll(@RequestHeader("X-Sharer-User-Id") Long userId) {
-        return itemService.getAllItemsDtoByUser(userId);
+    public List<Item> getAllItemsDtoByUser(@RequestHeader("X-Sharer-User-Id") Long userId) {
+        return itemService.getAllItemsByUser(userId);
     }
 
     @GetMapping("/search")
-    public List<ItemDto> searchItems(@PathParam("text") String text) {
+    public List<Item> searchItems(@PathParam("text") String text) {
         return itemService.searchItems(text);
     }
 }

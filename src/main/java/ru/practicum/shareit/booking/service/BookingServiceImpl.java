@@ -9,15 +9,14 @@ import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.booking.status.BookingStatus;
 import ru.practicum.shareit.exception.*;
 import ru.practicum.shareit.exception.IllegalAccessException;
-import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.repository.ItemDtoRepository;
+import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -28,7 +27,7 @@ public class BookingServiceImpl implements BookingService {
 
     private final UserRepository userRepository;
 
-    private final ItemDtoRepository itemDtoRepository;
+    private final ItemRepository itemDtoRepository;
 
     @Override
     public Booking createBooking(BookingDto bookingDto, Long userId) {
@@ -41,10 +40,16 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Booking getBookingWithNewStatus(Long bookingId, Boolean approved) {
+    public Booking patchBookingWithUpdatedStatus(Long bookingId, Long userId, Boolean approved) {
+        Booking booking = getBookingIfUserHasPatchingRights(bookingId, userId);
+        BookingStatus currentStatus = booking.getStatus();
         String statusName = (approved == true) ? BookingStatus.APPROVED.name() : BookingStatus.REJECTED.name();
-        Booking booking = bookingRepository.getReferenceById(bookingId);
-        booking.setStatus(BookingStatus.valueOf(statusName));
+        BookingStatus newStatus = BookingStatus.valueOf(statusName);
+        if (currentStatus == newStatus) {
+            throw new DuplicateStatusException("Данный статус уже установлен ранее.");
+        }
+
+        booking.setStatus(newStatus);
         bookingRepository.save(booking);
 
         return bookingRepository.getReferenceById(bookingId);
@@ -124,8 +129,8 @@ public class BookingServiceImpl implements BookingService {
 
     private User getUserIfHeHasEvenOneItem(Long userId) {
         checkIfUserExists(userId);
-        List<ItemDto> allItemsDto = itemDtoRepository.findAll();
-        for (ItemDto itemDto : allItemsDto) {
+        List<Item> allItemsDto = itemDtoRepository.findAll();
+        for (Item itemDto : allItemsDto) {
             if (itemDto.getOwner().getId() == userId) {
                 return userRepository.getReferenceById(userId);
             }
@@ -135,8 +140,10 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private Booking getBookingIfUserHasAccessRights(Long bookingId, Long userId) {
+        checkIfBookingExists(bookingId);
+
         Booking booking = bookingRepository.getReferenceById(bookingId);
-        ItemDto itemDto = itemDtoRepository.getReferenceById(booking.getItem().getId());
+        Item itemDto = itemDtoRepository.getReferenceById(booking.getItem().getId());
         if (booking.getBooker().getId() != userId && itemDto.getOwner().getId() != userId) {
             throw new IllegalAccessException(
                     "Пользователь с id = " + userId + " не имеет права доступа к информации о вещи с id = " + booking);
@@ -144,45 +151,28 @@ public class BookingServiceImpl implements BookingService {
         return booking;
     }
 
-    private List<BookingStatus> bookingStatusNamesForBookers(BookingStatus bookingStatus) {
-/*        if (bookingStatus == BookingStatus.ALL) {
-            return List.of(BookingStatus.CURRENT.name(),
-                    BookingStatus.PAST.name(),
-                    BookingStatus.FUTURE.name(),
-                    BookingStatus.WAITING.name(),
-                    BookingStatus.REJECTED.name());
-        } else {
-            return List.of(bookingStatus.name());
-        }*/
-        if (bookingStatus == BookingStatus.ALL) {
-            return List.of(BookingStatus.CURRENT,
-                    BookingStatus.PAST,
-                    BookingStatus.FUTURE,
-                    BookingStatus.WAITING,
-                    BookingStatus.REJECTED,
-                    BookingStatus.APPROVED);
-        } else {
-            return List.of(bookingStatus);
+    private Booking getBookingIfUserHasPatchingRights(Long bookingId, Long userId) {
+        checkIfBookingExists(bookingId);
+
+        Booking booking = bookingRepository.getReferenceById(bookingId);
+        Item itemDto = itemDtoRepository.getReferenceById(booking.getItem().getId());
+        if (itemDto.getOwner().getId() != userId) {
+            throw new IllegalAccessException(
+                    "Пользователь с id = " + userId + " не имеет права доступа к информации о бронировании с id = "
+                            + booking);
         }
+        return booking;
     }
 
-    private List<BookingStatus> bookingStatusNamesForItems(BookingStatus bookingStatus) {
-/*        if (bookingStatus == BookingStatus.ALL) {
-            return List.of(BookingStatus.WAITING.name(),
-                    BookingStatus.APPROVED.name(),
-                    BookingStatus.REJECTED.name(),
-                    BookingStatus.CANCELED.name());
-        } else {
-            return List.of(bookingStatus.name());
-        }*/
-        if (bookingStatus == BookingStatus.ALL) {
-            return List.of(BookingStatus.WAITING,
-                    BookingStatus.APPROVED,
-                    BookingStatus.REJECTED,
-                    BookingStatus.CANCELED);
-        } else {
-            return List.of(bookingStatus);
+    private void checkIfBookingExists(Long bookingId) {
+        List<Booking> bookings = bookingRepository.findAll();
+        for (Booking booking : bookings) {
+            if (booking.getId() == bookingId) {
+                return;
+            }
         }
+
+        throw new BookingDoesNotExistException("Бронирования с id = " + bookingId + "не найдено.");
     }
 
     private List<Booking> getBookingSortedByDateTime(List<Booking> unsortedBookings) {
@@ -200,7 +190,7 @@ public class BookingServiceImpl implements BookingService {
         checkIfUserExists(userId);
 
         try {
-            ItemDto itemDto = itemDtoRepository.getReferenceById(bookingDto.getItemId());
+            Item itemDto = itemDtoRepository.getReferenceById(bookingDto.getItemId());
             if (bookingDto.getEnd() == null
                     || bookingDto.getStart() == null
                     || bookingDto.getEnd().isBefore(LocalDateTime.now())
@@ -212,8 +202,11 @@ public class BookingServiceImpl implements BookingService {
             if (!itemDto.getAvailable()) {
                 throw new ItemNotAvailableException("Данная вещь в настоящий момент занята");
             }
+            if (userId == itemDto.getOwner().getId()) {
+                throw new IllegalBookingAttemptException("Владелец вещи не может бронировать свою вещь");
+            }
         } catch (EntityNotFoundException e) {
-            throw new ItemDtoDoesNotExistException("Вещи с таким id не существует");
+            throw new ItemDoesNotExistException("Вещи с таким id не существует");
         }
     }
 
@@ -226,3 +219,27 @@ public class BookingServiceImpl implements BookingService {
         }
     }
 }
+
+/*    private List<BookingStatus> bookingStatusNamesForBookers(BookingStatus bookingStatus) {
+        if (bookingStatus == BookingStatus.ALL) {
+            return List.of(BookingStatus.CURRENT,
+                    BookingStatus.PAST,
+                    BookingStatus.FUTURE,
+                    BookingStatus.WAITING,
+                    BookingStatus.REJECTED,
+                    BookingStatus.APPROVED);
+        } else {
+            return List.of(bookingStatus);
+        }
+    }
+
+    private List<BookingStatus> bookingStatusNamesForItems(BookingStatus bookingStatus) {
+        if (bookingStatus == BookingStatus.ALL) {
+            return List.of(BookingStatus.WAITING,
+                    BookingStatus.APPROVED,
+                    BookingStatus.REJECTED,
+                    BookingStatus.CANCELED);
+        } else {
+            return List.of(bookingStatus);
+        }
+    }*/

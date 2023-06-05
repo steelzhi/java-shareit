@@ -1,24 +1,24 @@
 package ru.practicum.shareit.item.service;
 
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemDtoForOwner;
+import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
 import java.util.List;
-import java.util.Map;
 
 @Service
 public interface ItemService {
 
-    ItemDto postItemDto(ItemDto itemDto, Long userId);
+    Item postItemDto(Item item, Long userId);
 
-    ItemDto patchItemDto(Long itemId, ItemDto itemDto, Long userId);
+    Item patchItemDto(Long itemId, Item item, Long userId);
 
-    ItemDto getItemDto(Long itemId);
+    ItemDtoForOwner getItemDtoById(Long itemId, Long userId);
 
-    List<ItemDto> getAllItemsDtoByUser(Long userId);
+    List<Item> getAllItemsByUser(Long userId);
 
-    List<ItemDto> searchItems(String text);
+    List<Item> searchItems(String text);
 
     void checkIfUserExists(Long userId, List<User> users);
 

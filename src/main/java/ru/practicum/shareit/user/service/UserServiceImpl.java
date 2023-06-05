@@ -44,7 +44,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public User patchUser(Long id, User user) {
         User existingUser = getUser(id);
-        userRepository.patchUser(id, user.getName(), user.getEmail());
         user.setId(id);
         if (user.getName() == null) {
             user.setName(existingUser.getName());
@@ -52,7 +51,7 @@ public class UserServiceImpl implements UserService {
         if (user.getEmail() == null) {
             user.setEmail(existingUser.getEmail());
         }
-        return user;
+        return userRepository.save(user);
     }
 
     @Override

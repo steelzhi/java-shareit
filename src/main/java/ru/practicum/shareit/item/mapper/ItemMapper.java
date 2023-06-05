@@ -1,25 +1,30 @@
 package ru.practicum.shareit.item.mapper;
 
 import org.springframework.stereotype.Component;
-import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.booking.dto.BookingDto;
+import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.dto.ItemDtoForOwner;
 
 @Component
 public class ItemMapper {
 
-    public static ItemDto mapToItemDto(Item item) {
-        return new ItemDto(
+    public static ItemDtoForOwner mapToItemDtoForOwner(
+            Item item, BookingDto lastBookingDto, BookingDto nextBookingDto) {
+        return new ItemDtoForOwner(
                 item.getId(),
                 item.getName(),
                 item.getDescription(),
-                item.getIsAvailable(),
+                item.getAvailable(),
                 item.getOwner(),
-                item.getRequest()
+                item.getRequest(),
+                lastBookingDto,
+                nextBookingDto
         );
     }
 
-    public static Item mapToItem(ItemDto itemDto) {
-        return new Item(
+/*    public static ItemDto mapToItem(Item itemDto) {
+        return new ItemDto(
                 itemDto.getId(),
                 itemDto.getName(),
                 itemDto.getDescription(),
@@ -27,5 +32,5 @@ public class ItemMapper {
                 itemDto.getOwner(),
                 itemDto.getRequest()
         );
-    }
+    }*/
 }

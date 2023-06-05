@@ -5,7 +5,6 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.service.BookingService;
-import ru.practicum.shareit.booking.status.BookingStatus;
 
 import java.util.List;
 
@@ -23,10 +22,10 @@ public class BookingController {
     }
 
     @PatchMapping("/{bookingId}")
-    public Booking getBookingWithNewStatus(@PathVariable Long bookingId,
-                                           @RequestParam("approved") Boolean approved,
-                                           @RequestHeader("X-Sharer-User-Id") Long userId) {
-        return bookingService.getBookingWithNewStatus(bookingId, approved);
+    public Booking patchBookingWithUpdatedStatus(@PathVariable Long bookingId,
+                                                 @RequestParam("approved") Boolean approved,
+                                                 @RequestHeader("X-Sharer-User-Id") Long userId) {
+        return bookingService.patchBookingWithUpdatedStatus(bookingId, userId, approved);
     }
 
     @GetMapping("/{bookingId}")
