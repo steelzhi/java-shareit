@@ -73,7 +73,7 @@ public class BookingServiceImpl implements BookingService {
         checkIfUserExists(userId);
 
         List<Booking> itemBookings =
-                bookingRepository.getAllBookingsForUserItems(userId); // Здесь должен быть другой метод, а getAllBookingsForUserItems
+                bookingRepository.getAllBookingsForUserItems(userId);
         return getBookingsWithDemandedStatus(itemBookings, bookingStatus);
     }
 
@@ -125,18 +125,6 @@ public class BookingServiceImpl implements BookingService {
             }
         }
         return getBookingSortedByDateTime(userBookingsWithDemandedStatus);
-    }
-
-    private User getUserIfHeHasEvenOneItem(Long userId) {
-        checkIfUserExists(userId);
-        List<Item> allItemsDto = itemDtoRepository.findAll();
-        for (Item itemDto : allItemsDto) {
-            if (itemDto.getOwner().getId() == userId) {
-                return userRepository.getReferenceById(userId);
-            }
-        }
-
-        throw new UserDoesNotHaveItemsException("У данного пользователя нет ни одной вещи.");
     }
 
     private Booking getBookingIfUserHasAccessRights(Long bookingId, Long userId) {
@@ -219,27 +207,3 @@ public class BookingServiceImpl implements BookingService {
         }
     }
 }
-
-/*    private List<BookingStatus> bookingStatusNamesForBookers(BookingStatus bookingStatus) {
-        if (bookingStatus == BookingStatus.ALL) {
-            return List.of(BookingStatus.CURRENT,
-                    BookingStatus.PAST,
-                    BookingStatus.FUTURE,
-                    BookingStatus.WAITING,
-                    BookingStatus.REJECTED,
-                    BookingStatus.APPROVED);
-        } else {
-            return List.of(bookingStatus);
-        }
-    }
-
-    private List<BookingStatus> bookingStatusNamesForItems(BookingStatus bookingStatus) {
-        if (bookingStatus == BookingStatus.ALL) {
-            return List.of(BookingStatus.WAITING,
-                    BookingStatus.APPROVED,
-                    BookingStatus.REJECTED,
-                    BookingStatus.CANCELED);
-        } else {
-            return List.of(bookingStatus);
-        }
-    }*/

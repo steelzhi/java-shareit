@@ -1,17 +1,13 @@
 package ru.practicum.shareit.user.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.shareit.exception.DuplicateEmailException;
 import ru.practicum.shareit.exception.UserDoesNotExistException;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor

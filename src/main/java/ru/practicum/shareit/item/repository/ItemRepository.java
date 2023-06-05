@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface ItemRepository extends JpaRepository<Item, Long> {
 
-    List<Item> findAllByOwnerId(Long ownerId);
+    List<Item> findAllByOwner_Id(Long ownerId);
 }

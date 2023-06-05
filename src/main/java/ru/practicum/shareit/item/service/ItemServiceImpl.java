@@ -4,12 +4,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
+import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exception.IllegalAccessException;
 import ru.practicum.shareit.exception.ItemDoesNotExistException;
 import ru.practicum.shareit.exception.UserDoesNotExistException;
 import ru.practicum.shareit.exception.UserDoesNotExistOrDoesNotHaveAnyItemsException;
-import ru.practicum.shareit.item.dto.ItemDtoForOwner;
+import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
@@ -18,6 +19,7 @@ import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -38,7 +40,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public Item patchItemDto(Long itemId, Item item, Long userId) {
         checkIfUserAndItemExists(userId, itemId);
-        checkIfUserHasRightToPatchOrGetBookingsOfItem(itemId, userId);
+        checkIfUserHasRightToPatchOrGetBookings(itemId, userId);
         item.setId(itemId);
         Item existingItemDto = getItem(itemId);
         if (item.getName() == null) {
@@ -60,11 +62,12 @@ public class ItemServiceImpl implements ItemService {
         return itemRepository.save(item);
     }
 
-    private Item getItem(Long itemId) {
+    @Override
+    public ItemDto getItemDtoById(Long itemId, Long userId) {
         List<Item> items = itemRepository.findAll();
         for (Item item : items) {
             if (item.getId() == itemId) {
-                return item;
+                return getItemDtoWithBookings(item, userId);
             }
         }
 
@@ -72,13 +75,61 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public ItemDtoForOwner getItemDtoById(Long itemId, Long userId) {
-        //checkIfUserHasRightToPatchOrGetBookingsOfItem(itemId, ownerId);
+    public List<ItemDto> getAllItemsDtoByUser(Long userId) {
+        checkIfUserExists(userId, userRepository.findAll());
+        List<Item> itemsList = itemRepository.findAllByOwner_Id(userId);
+        List<ItemDto> itemDtoList = new ArrayList<>();
+        for (Item item : itemsList) {
+            itemDtoList.add(getItemDtoWithBookings(item, userId));
+        }
 
+        itemDtoList.sort((itemDto1, itemDto2) -> {
+            if (itemDto1.getId() <= itemDto2.getId()) {
+                return -1;
+            } else {
+                return 1;
+            }
+        });
+
+        return itemDtoList;
+    }
+
+    @Override
+    public List<Item> searchItems(String text) {
+        List<Item> foundBySearch = new ArrayList<>();
+
+        if (!text.isBlank()) {
+            foundBySearch = itemRepository.findAll().stream()
+                    .filter(item -> item.getName().toLowerCase().contains(text.toLowerCase())
+                            || item.getDescription().toLowerCase().contains(text.toLowerCase()))
+                    .filter(item -> item.getAvailable() == true)
+                    .collect(Collectors.toList());
+        }
+
+        return foundBySearch;
+    }
+
+    @Override
+    public void checkIfUserExists(Long userId, List<User> users) {
+        for (User user : users) {
+            if (user.getId().equals(userId)) {
+                return;
+            }
+        }
+
+        throw new UserDoesNotExistException("Пользователя с указанным id не существует.");
+    }
+
+    private List<Item> getAllItemsByUser(Long userId) {
+        checkIfUserExists(userId, userRepository.findAll());
+        return itemRepository.findAllByOwner_Id(userId);
+    }
+
+    private Item getItem(Long itemId) {
         List<Item> items = itemRepository.findAll();
         for (Item item : items) {
             if (item.getId() == itemId) {
-                return getItemForOwnerWithBookings(item, userId);
+                return item;
             }
         }
 
@@ -93,9 +144,9 @@ public class ItemServiceImpl implements ItemService {
         return false;
     }
 
-    private ItemDtoForOwner getItemForOwnerWithBookings(Item item, Long userId) {
-        List<BookingDto> ownersBookings =
-                BookingMapper.mapToBookingDto(bookingRepository.getAllBookingsForUserItems(item.getOwner().getId()));
+    private ItemDto getItemDtoWithBookings(Item item, Long userId) {
+        List<BookingDto> ownersBookings = BookingMapper.mapToBookingDto(
+                bookingRepository.getAllBookingsByOwner_IdAndItem_Id(userId, item.getId()));
         List<BookingDto> pastBookings = new ArrayList<>();
         List<BookingDto> futureBookings = new ArrayList<>();
         LocalDateTime now = LocalDateTime.now();
@@ -136,40 +187,6 @@ public class ItemServiceImpl implements ItemService {
         return ItemMapper.mapToItemDtoForOwner(item, lastBookingDto, nextBookingDto);
     }
 
-
-    @Override
-    public List<Item> getAllItemsByUser(Long userId) {
-        checkIfUserExists(userId, userRepository.findAll());
-
-        return itemRepository.findAllByOwnerId(userId);
-    }
-
-    @Override
-    public List<Item> searchItems(String text) {
-        List<Item> foundBySearch = new ArrayList<>();
-
-        if (!text.isBlank()) {
-            foundBySearch = itemRepository.findAll().stream()
-                    .filter(item -> item.getName().toLowerCase().contains(text.toLowerCase())
-                            || item.getDescription().toLowerCase().contains(text.toLowerCase()))
-                    .filter(item -> item.getAvailable() == true)
-                    .collect(Collectors.toList());
-        }
-
-        return foundBySearch;
-    }
-
-    @Override
-    public void checkIfUserExists(Long userId, List<User> users) {
-        for (User user : users) {
-            if (user.getId().equals(userId)) {
-                return;
-            }
-        }
-
-        throw new UserDoesNotExistException("Пользователя с указанным id не существует.");
-    }
-
     public void checkIfUserAndItemExists(Long userId, Long itemId) {
         List<Item> userItems = getAllItemsByUser(userId);
         if (userItems.isEmpty()) {
@@ -185,7 +202,7 @@ public class ItemServiceImpl implements ItemService {
         throw new ItemDoesNotExistException("Вещи с указанным id не существует.");
     }
 
-    private void checkIfUserHasRightToPatchOrGetBookingsOfItem(Long itemId, Long userId) {
+    private void checkIfUserHasRightToPatchOrGetBookings(Long itemId, Long userId) {
         Item item = itemRepository.getReferenceById(itemId);
         if (item.getOwner().getId() != userId) {
             throw new IllegalAccessException("Пользователь с id = " + userId + " не является собственником " +
