@@ -7,8 +7,8 @@ import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.booking.status.BookingStatus;
-import ru.practicum.shareit.exception.*;
 import ru.practicum.shareit.exception.IllegalAccessException;
+import ru.practicum.shareit.exception.*;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.mapper.CommentMapper;
@@ -23,7 +23,6 @@ import ru.practicum.shareit.user.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -70,11 +69,6 @@ public class ItemServiceImpl implements ItemService {
         List<Item> items = itemRepository.findAll();
         for (Item item : items) {
             if (item.getId() == itemId) {
-                ItemDto itemDto = getItemDtoWithBookingsAndComments(item, userId);
-                if (!itemDto.getComments().isEmpty()) {
-                    System.out.println("created: " + itemDto.getComments().get(0).getCreated());
-
-                }
                 return getItemDtoWithBookingsAndComments(item, userId);
             }
         }
@@ -105,27 +99,11 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public List<Item> searchItems(String text) {
         List<Item> foundBySearch = new ArrayList<>();
-
         if (!text.isBlank()) {
-            foundBySearch = itemRepository.findAll().stream()
-                    .filter(item -> item.getName().toLowerCase().contains(text.toLowerCase())
-                            || item.getDescription().toLowerCase().contains(text.toLowerCase()))
-                    .filter(item -> item.getAvailable() == true)
-                    .collect(Collectors.toList());
+            foundBySearch = itemRepository.searchItems(text);
         }
 
         return foundBySearch;
-    }
-
-    @Override
-    public void checkIfUserExists(Long userId, List<User> users) {
-        for (User user : users) {
-            if (user.getId().equals(userId)) {
-                return;
-            }
-        }
-
-        throw new UserDoesNotExistException("Пользователя с указанным id не существует.");
     }
 
     @Override
@@ -156,6 +134,16 @@ public class ItemServiceImpl implements ItemService {
 
         throw new PostCommentProhibitedException("Вещь с id = " + itemId + " не была в аренде у пользователя с id = " +
                 userId + " либо аренда еще не завершилась.");
+    }
+
+    private void checkIfUserExists(Long userId, List<User> users) {
+        for (User user : users) {
+            if (user.getId().equals(userId)) {
+                return;
+            }
+        }
+
+        throw new UserDoesNotExistException("Пользователя с указанным id не существует.");
     }
 
     private List<Item> getAllItemsByUser(Long userId) {
@@ -229,7 +217,7 @@ public class ItemServiceImpl implements ItemService {
         return ItemMapper.mapToItemDto(item, lastBookingDto, nextBookingDto, comments);
     }
 
-    public void checkIfUserAndItemExists(Long userId, Long itemId) {
+    private void checkIfUserAndItemExists(Long userId, Long itemId) {
         List<Item> userItems = getAllItemsByUser(userId);
         if (userItems.isEmpty()) {
             throw new UserDoesNotExistOrDoesNotHaveAnyItemsException(

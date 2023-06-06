@@ -5,7 +5,6 @@ import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,7 +16,7 @@ public class BookingMapper {
                 itemDto,
                 booker,
                 bookingDto.getStatus()
-                );
+        );
     }
 
     public static BookingDto mapToBookingDto(Booking booking) {

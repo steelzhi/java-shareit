@@ -27,7 +27,8 @@ public class PersistenceConfig {
 
     private Properties hibernateProperties() {
         Properties properties = new Properties();
-        properties.put("hibernate.dialect", environment.getRequiredProperty("spring.jpa.properties.hibernate.dialect"));
+        properties.put("hibernate.dialect",
+                environment.getRequiredProperty("spring.jpa.properties.hibernate.dialect"));
         properties.put("hibernate.show_sql", environment.getProperty("hibernate.show_sql", "false"));
         return properties;
     }

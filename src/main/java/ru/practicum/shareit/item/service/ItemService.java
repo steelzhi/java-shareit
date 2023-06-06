@@ -5,7 +5,6 @@ import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.user.model.User;
 
 import java.util.List;
 
@@ -21,10 +20,6 @@ public interface ItemService {
     List<ItemDto> getAllItemsDtoByUser(Long userId);
 
     List<Item> searchItems(String text);
-
-    void checkIfUserExists(Long userId, List<User> users);
-
-    void checkIfUserAndItemExists(Long userId, Long itemDtoId);
 
     CommentDto postComment(Long itemId, Comment comment, Long userId);
 }
