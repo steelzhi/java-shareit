@@ -68,7 +68,7 @@ public class ItemServiceImpl implements ItemService {
     public ItemDto getItemDtoById(Long itemId, Long userId) {
         List<Item> items = itemRepository.findAll();
         for (Item item : items) {
-            if (item.getId() == itemId) {
+            if (item.getId().equals(itemId)) {
                 return getItemDtoWithBookingsAndComments(item, userId);
             }
         }
@@ -117,7 +117,7 @@ public class ItemServiceImpl implements ItemService {
         List<Booking> allBookingsForItem = bookingRepository.getAllBookingsForItem_Id(itemId);
         LocalDateTime now = LocalDateTime.now().plusSeconds(1);
         for (Booking booking : allBookingsForItem) {
-            if (booking.getBooker().getId() == userId && booking.getEnd().isBefore(now)) {
+            if (booking.getBooker().getId().equals(userId) && booking.getEnd().isBefore(now)) {
                 comment.setItem(item);
                 comment.setAuthor(author);
                 comment.setCreated(now);
@@ -154,7 +154,7 @@ public class ItemServiceImpl implements ItemService {
     private Item getItem(Long itemId) {
         List<Item> items = itemRepository.findAll();
         for (Item item : items) {
-            if (item.getId() == itemId) {
+            if (item.getId().equals(itemId)) {
                 return item;
             }
         }
@@ -164,7 +164,7 @@ public class ItemServiceImpl implements ItemService {
 
     private boolean isUserOwnerOfItem(Long itemId, Long userId) {
         Item item = itemRepository.getReferenceById(itemId);
-        if (item.getOwner().getId() == userId) {
+        if (item.getOwner().getId().equals(userId)) {
             return true;
         }
         return false;
@@ -224,7 +224,7 @@ public class ItemServiceImpl implements ItemService {
                     "Пользователя с указанным id не существует либо пользователь не добавил ни одной вещи.");
         }
         for (Item item : userItems) {
-            if (item.getId() == itemId) {
+            if (item.getId().equals(itemId)) {
                 return;
             }
         }
@@ -234,7 +234,7 @@ public class ItemServiceImpl implements ItemService {
 
     private void checkIfUserHasRightToPatchOrGetBookings(Long itemId, Long userId) {
         Item item = itemRepository.getReferenceById(itemId);
-        if (item.getOwner().getId() != userId) {
+        if (!item.getOwner().getId().equals(userId)) {
             throw new IllegalAccessException("Пользователь с id = " + userId + " не является собственником " +
                     "вещи с id = " + item.getId() + " и не имеет прав ее изменение");
         }

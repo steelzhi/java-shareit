@@ -132,7 +132,7 @@ public class BookingServiceImpl implements BookingService {
 
         Booking booking = bookingRepository.getReferenceById(bookingId);
         Item itemDto = itemDtoRepository.getReferenceById(booking.getItem().getId());
-        if (booking.getBooker().getId() != userId && itemDto.getOwner().getId() != userId) {
+        if (!booking.getBooker().getId().equals(userId) && !itemDto.getOwner().getId().equals(userId)) {
             throw new IllegalAccessException(
                     "Пользователь с id = " + userId + " не имеет права доступа к информации о вещи с id = " + booking);
         }
@@ -144,7 +144,7 @@ public class BookingServiceImpl implements BookingService {
 
         Booking booking = bookingRepository.getReferenceById(bookingId);
         Item itemDto = itemDtoRepository.getReferenceById(booking.getItem().getId());
-        if (itemDto.getOwner().getId() != userId) {
+        if (!itemDto.getOwner().getId().equals(userId)) {
             throw new IllegalAccessException(
                     "Пользователь с id = " + userId + " не имеет права доступа к информации о бронировании с id = "
                             + booking);
@@ -155,7 +155,7 @@ public class BookingServiceImpl implements BookingService {
     private void checkIfBookingExists(Long bookingId) {
         List<Booking> bookings = bookingRepository.findAll();
         for (Booking booking : bookings) {
-            if (booking.getId() == bookingId) {
+            if (booking.getId().equals(bookingId)) {
                 return;
             }
         }
@@ -190,7 +190,7 @@ public class BookingServiceImpl implements BookingService {
             if (!itemDto.getAvailable()) {
                 throw new ItemNotAvailableException("Данная вещь в настоящий момент занята");
             }
-            if (userId == itemDto.getOwner().getId()) {
+            if (userId.equals(itemDto.getOwner().getId())) {
                 throw new IllegalBookingAttemptException("Владелец вещи не может бронировать свою вещь");
             }
         } catch (EntityNotFoundException e) {

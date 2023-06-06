@@ -23,7 +23,7 @@ public class UserServiceImpl implements UserService {
     public User getUser(Long userId) {
         List<User> users = getUsers();
         for (User user : users) {
-            if (user.getId() == userId) {
+            if (user.getId().equals(userId)) {
                 return user;
             }
         }
