@@ -26,7 +26,7 @@ public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
     private final ItemRepository itemDtoRepository;
-    private final static long DELAY = 500_000_000;
+    private final long DELAY = 500_000_000;
 
     @Override
     public Booking createBooking(BookingDto bookingDto, Long userId) {
