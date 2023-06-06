@@ -9,7 +9,9 @@ import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.booking.status.BookingStatus;
 import ru.practicum.shareit.exception.*;
 import ru.practicum.shareit.exception.IllegalAccessException;
+import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.mapper.CommentMapper;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
@@ -68,6 +70,11 @@ public class ItemServiceImpl implements ItemService {
         List<Item> items = itemRepository.findAll();
         for (Item item : items) {
             if (item.getId() == itemId) {
+                ItemDto itemDto = getItemDtoWithBookingsAndComments(item, userId);
+                if (!itemDto.getComments().isEmpty()) {
+                    System.out.println("created: " + itemDto.getComments().get(0).getCreated());
+
+                }
                 return getItemDtoWithBookingsAndComments(item, userId);
             }
         }
@@ -122,7 +129,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Comment postComment(Long itemId, Comment comment, Long userId) {
+    public CommentDto postComment(Long itemId, Comment comment, Long userId) {
         if (comment.getText().isBlank()) {
             throw new EmptyCommentException("Комментарий не может быть пустым.");
         }
@@ -130,14 +137,15 @@ public class ItemServiceImpl implements ItemService {
         Item item = getItem(itemId);
         User author = userRepository.getReferenceById(userId);
         List<Booking> allBookingsForItem = bookingRepository.getAllBookingsForItem_Id(itemId);
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now().plusSeconds(1);
         for (Booking booking : allBookingsForItem) {
             if (booking.getBooker().getId() == userId && booking.getEnd().isBefore(now)) {
                 comment.setItem(item);
                 comment.setAuthor(author);
                 comment.setCreated(now);
                 try {
-                    return commentRepository.save(comment);
+                    Comment savedComment = commentRepository.save(comment);
+                    return CommentMapper.mapToCommentDto(savedComment);
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -181,7 +189,9 @@ public class ItemServiceImpl implements ItemService {
         List<BookingDto> futureBookings = new ArrayList<>();
         LocalDateTime now = LocalDateTime.now();
         for (BookingDto bookingDto : ownersBookings) {
-            if (bookingDto.getEnd().isBefore(now) && bookingDto.getStatus() != BookingStatus.REJECTED) {
+            if ((bookingDto.getEnd().isBefore(now) && bookingDto.getStatus() != BookingStatus.REJECTED)
+                    || (bookingDto.getStart().isBefore(now) && bookingDto.getEnd().isAfter(now)
+                    && bookingDto.getStatus() == BookingStatus.APPROVED)) {
                 pastBookings.add(bookingDto);
             }
             if (bookingDto.getStart().isAfter(now) && bookingDto.getStatus() != BookingStatus.REJECTED) {
@@ -216,7 +226,7 @@ public class ItemServiceImpl implements ItemService {
 
         List<Comment> comments = commentRepository.findAllByItem_Id(item.getId());
 
-        return ItemMapper.mapToItemDtoForOwner(item, lastBookingDto, nextBookingDto, comments);
+        return ItemMapper.mapToItemDto(item, lastBookingDto, nextBookingDto, comments);
     }
 
     public void checkIfUserAndItemExists(Long userId, Long itemId) {

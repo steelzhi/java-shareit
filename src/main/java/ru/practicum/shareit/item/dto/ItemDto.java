@@ -24,5 +24,5 @@ public class ItemDto {
     private Long request;
     private BookingDto lastBooking;
     private BookingDto nextBooking;
-    private List<Comment> comments;
+    private List<CommentDto> comments;
 }

@@ -11,7 +11,7 @@ import java.util.List;
 @Component
 public class ItemMapper {
 
-    public static ItemDto mapToItemDtoForOwner(
+    public static ItemDto mapToItemDto(
             Item item, BookingDto lastBookingDto, BookingDto nextBookingDto, List<Comment> comments) {
         return new ItemDto(
                 item.getId(),
@@ -22,18 +22,9 @@ public class ItemMapper {
                 item.getRequest(),
                 lastBookingDto,
                 nextBookingDto,
-                comments
+                CommentMapper.mapToCommentDto(comments)
         );
     }
 
-/*    public static ItemDto mapToItem(Item itemDto) {
-        return new ItemDto(
-                itemDto.getId(),
-                itemDto.getName(),
-                itemDto.getDescription(),
-                itemDto.getAvailable(),
-                itemDto.getOwner(),
-                itemDto.getRequest()
-        );
-    }*/
+
 }

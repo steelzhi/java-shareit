@@ -24,10 +24,9 @@ import java.util.List;
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
-
     private final UserRepository userRepository;
-
     private final ItemRepository itemDtoRepository;
+    private final static long DELAY = 500_000_000;
 
     @Override
     public Booking createBooking(BookingDto bookingDto, Long userId) {
@@ -79,7 +78,6 @@ public class BookingServiceImpl implements BookingService {
 
     private List<Booking> getBookingsWithDemandedStatus(List<Booking> bookings, String bookingStatus) {
         List<Booking> userBookingsWithDemandedStatus = new ArrayList<>();
-        LocalDateTime now = LocalDateTime.now().minusSeconds(5);
         if (bookingStatus == null) {
             bookingStatus = "ALL";
         }
@@ -91,6 +89,8 @@ public class BookingServiceImpl implements BookingService {
         }
 
         for (Booking booking : bookings) {
+            LocalDateTime now = LocalDateTime.now().minusNanos(DELAY);
+
             switch (bookingStatus) {
                 case "CURRENT":
                     if (booking.getStart().isBefore(now) && booking.getEnd().isAfter(now)) {

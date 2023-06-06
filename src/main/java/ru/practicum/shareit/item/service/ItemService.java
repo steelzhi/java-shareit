@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item.service;
 
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
@@ -25,5 +26,5 @@ public interface ItemService {
 
     void checkIfUserAndItemExists(Long userId, Long itemDtoId);
 
-    Comment postComment(Long itemId, Comment comment, Long userId);
+    CommentDto postComment(Long itemId, Comment comment, Long userId);
 }
