@@ -8,26 +8,22 @@ import java.util.List;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
-    List<Booking> getAllBookingsByBooker_Id(Long bookerId);
+    List<Booking> getAllBookingsByBooker_Id(long bookerId);
 
-    @Query(value = "SELECT * " +
-            "FROM bookings AS b " +
-            "JOIN items AS i ON i.id = b.item_id " +
-            "JOIN users AS u ON u.id = i.user_id " +
-            "WHERE u.id = ?1", nativeQuery = true)
-    List<Booking> getAllBookingsForUserItems(Long id);
+    @Query("SELECT b " +
+            "FROM Booking AS b " +
+            "JOIN b.item AS i " +
+            "JOIN i.owner AS o " +
+            "WHERE o.id = ?1")
+    List<Booking> getAllBookingsForOwnerItems(long ownerId);
 
-    @Query(value = "SELECT * " +
-            "FROM bookings AS b " +
-            "JOIN items AS i ON i.id = b.item_id " +
-            "JOIN users AS u ON u.id = i.user_id " +
-            "WHERE u.id = ?1 " +
-            "AND i.id = ?2", nativeQuery = true)
-    List<Booking> getAllBookingsByOwner_IdAndItem_Id(Long userId, Long itemId);
+    @Query("SELECT b " +
+            "FROM Booking AS b " +
+            "JOIN b.item AS i " +
+            "JOIN i.owner AS o " +
+            "WHERE o.id = ?1 " +
+            "AND i.id = ?2")
+    List<Booking> getAllBookingsByOwner_IdAndItem_Id(long ownerId, long itemId);
 
-    @Query(value = "SELECT * " +
-            "FROM bookings AS b " +
-            "JOIN items AS i ON i.id = b.item_id " +
-            "AND i.id = ?1", nativeQuery = true)
-    List<Booking> getAllBookingsForItem_Id(Long itemId);
+    List<Booking> findAllBookingsByItem_Id(long itemId);
 }

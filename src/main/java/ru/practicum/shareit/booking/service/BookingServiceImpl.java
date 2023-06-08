@@ -2,6 +2,7 @@ package ru.practicum.shareit.booking.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
@@ -11,10 +12,8 @@ import ru.practicum.shareit.exception.IllegalAccessException;
 import ru.practicum.shareit.exception.*;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
-import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
-import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +28,8 @@ public class BookingServiceImpl implements BookingService {
     private final long delay = 500_000_000;
 
     @Override
-    public Booking createBooking(BookingDto bookingDto, Long userId) {
+    @Transactional
+    public Booking createBooking(BookingDto bookingDto, long userId) {
         checkIfTheItemIsAvailableAntOtherParamsAreCorrect(bookingDto, userId);
         bookingDto.setStatus(BookingStatus.WAITING);
         Long itemDtoId = bookingDto.getItemId();
@@ -39,7 +39,8 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Booking patchBookingWithUpdatedStatus(Long bookingId, Long userId, Boolean approved) {
+    @Transactional
+    public Booking patchBookingWithUpdatedStatus(long bookingId, long userId, Boolean approved) {
         Booking booking = getBookingIfUserHasPatchingRights(bookingId, userId);
         BookingStatus currentStatus = booking.getStatus();
         String statusName = (approved == true) ? BookingStatus.APPROVED.name() : BookingStatus.REJECTED.name();
@@ -55,12 +56,13 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Booking getBooking(Long bookingId, Long userId) {
+    public Booking getBooking(long bookingId, long userId) {
         return getBookingIfUserHasAccessRights(bookingId, userId);
     }
 
     @Override
-    public List<Booking> getAllBookingsByUser(Long userId, String bookingStatus) {
+    @Transactional(readOnly = true)
+    public List<Booking> getAllBookingsByUser(long userId, String bookingStatus) {
         checkIfUserExists(userId);
 
         List<Booking> userBookings = bookingRepository.getAllBookingsByBooker_Id(userId);
@@ -68,22 +70,24 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<Booking> getAllBookingsForUserItems(Long userId, String bookingStatus) {
+    @Transactional(readOnly = true)
+    public List<Booking> getAllBookingsForUserItems(long userId, String bookingStatus) {
         checkIfUserExists(userId);
 
         List<Booking> itemBookings =
-                bookingRepository.getAllBookingsForUserItems(userId);
+                bookingRepository.getAllBookingsForOwnerItems(userId);
         return getBookingsWithDemandedStatus(itemBookings, bookingStatus);
     }
 
-    private List<Booking> getBookingsWithDemandedStatus(List<Booking> bookings, String bookingStatus) {
+    private List<Booking> getBookingsWithDemandedStatus(List<Booking> bookings, String status) {
         List<Booking> userBookingsWithDemandedStatus = new ArrayList<>();
-        if (bookingStatus == null) {
-            bookingStatus = "ALL";
+        if (status == null) {
+            status = "ALL";
         }
 
+        BookingStatus bookingStatus;
         try {
-            BookingStatus.valueOf(bookingStatus);
+            bookingStatus = BookingStatus.valueOf(status);
         } catch (IllegalArgumentException e) {
             throw new WrongBookingStatusException("Введен некорректный статус бронирования");
         }
@@ -92,75 +96,61 @@ public class BookingServiceImpl implements BookingService {
             LocalDateTime now = LocalDateTime.now().minusNanos(delay);
 
             switch (bookingStatus) {
-                case "CURRENT":
+                case CURRENT:
                     if (booking.getStart().isBefore(now) && booking.getEnd().isAfter(now)) {
                         userBookingsWithDemandedStatus.add(booking);
                     }
                     break;
-                case "PAST":
+                case PAST:
                     if (booking.getEnd().isBefore(now)) {
                         userBookingsWithDemandedStatus.add(booking);
                     }
                     break;
-                case "FUTURE":
+                case FUTURE:
                     if (booking.getStart().isAfter(now)) {
                         userBookingsWithDemandedStatus.add(booking);
                     }
                     break;
-                case "WAITING":
+                case WAITING:
                     if (booking.getStatus() == BookingStatus.WAITING) {
                         userBookingsWithDemandedStatus.add(booking);
                     }
                     break;
-                case "REJECTED":
+                case REJECTED:
                     if (booking.getStatus() == BookingStatus.REJECTED) {
                         userBookingsWithDemandedStatus.add(booking);
                     }
                     break;
-                case "ALL":
+                case ALL:
                     userBookingsWithDemandedStatus.add(booking);
-                    break;
-                default:
-                    throw new WrongBookingStatusException("Введен некорректный статус бронирования");
             }
         }
         return getBookingSortedByDateTime(userBookingsWithDemandedStatus);
     }
 
-    private Booking getBookingIfUserHasAccessRights(Long bookingId, Long userId) {
-        checkIfBookingExists(bookingId);
-
-        Booking booking = bookingRepository.getReferenceById(bookingId);
+    @Transactional(readOnly = true)
+    private Booking getBookingIfUserHasAccessRights(long bookingId, long userId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new BookingDoesNotExistException("Бронирования с id = " + bookingId + "не найдено."));
         Item itemDto = itemDtoRepository.getReferenceById(booking.getItem().getId());
-        if (!booking.getBooker().getId().equals(userId) && !itemDto.getOwner().getId().equals(userId)) {
+        if (booking.getBooker().getId() != userId && itemDto.getOwner().getId() != userId) {
             throw new IllegalAccessException(
                     "Пользователь с id = " + userId + " не имеет права доступа к информации о вещи с id = " + booking);
         }
         return booking;
     }
 
-    private Booking getBookingIfUserHasPatchingRights(Long bookingId, Long userId) {
-        checkIfBookingExists(bookingId);
-
-        Booking booking = bookingRepository.getReferenceById(bookingId);
+    @Transactional(readOnly = true)
+    private Booking getBookingIfUserHasPatchingRights(long bookingId, long userId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new BookingDoesNotExistException("Бронирования с id = " + bookingId + "не найдено."));
         Item itemDto = itemDtoRepository.getReferenceById(booking.getItem().getId());
-        if (!itemDto.getOwner().getId().equals(userId)) {
+        if (itemDto.getOwner().getId() != userId) {
             throw new IllegalAccessException(
                     "Пользователь с id = " + userId + " не имеет права доступа к информации о бронировании с id = "
                             + booking);
         }
         return booking;
-    }
-
-    private void checkIfBookingExists(Long bookingId) {
-        List<Booking> bookings = bookingRepository.findAll();
-        for (Booking booking : bookings) {
-            if (booking.getId().equals(bookingId)) {
-                return;
-            }
-        }
-
-        throw new BookingDoesNotExistException("Бронирования с id = " + bookingId + "не найдено.");
     }
 
     private List<Booking> getBookingSortedByDateTime(List<Booking> unsortedBookings) {
@@ -174,36 +164,31 @@ public class BookingServiceImpl implements BookingService {
         return unsortedBookings;
     }
 
-    private void checkIfTheItemIsAvailableAntOtherParamsAreCorrect(BookingDto bookingDto, Long userId) {
+    @Transactional(readOnly = true)
+    private void checkIfTheItemIsAvailableAntOtherParamsAreCorrect(BookingDto bookingDto, long userId) {
         checkIfUserExists(userId);
 
-        try {
-            Item itemDto = itemDtoRepository.getReferenceById(bookingDto.getItemId());
-            if (bookingDto.getEnd() == null
-                    || bookingDto.getStart() == null
-                    || bookingDto.getEnd().isBefore(LocalDateTime.now())
-                    || bookingDto.getStart().isBefore(LocalDateTime.now())
-                    || bookingDto.getEnd().isBefore(bookingDto.getStart())
-                    || bookingDto.getEnd().equals(bookingDto.getStart())) {
-                throw new IncorrectDateException("Некорректная дата аренды");
-            }
-            if (!itemDto.getAvailable()) {
-                throw new ItemNotAvailableException("Данная вещь в настоящий момент занята");
-            }
-            if (userId.equals(itemDto.getOwner().getId())) {
-                throw new IllegalBookingAttemptException("Владелец вещи не может бронировать свою вещь");
-            }
-        } catch (EntityNotFoundException e) {
-            throw new ItemDoesNotExistException("Вещи с таким id не существует");
+        Item itemDto = itemDtoRepository.findById(bookingDto.getItemId())
+                .orElseThrow(() -> new ItemDoesNotExistException("Вещи с таким id не существует"));
+
+        if (bookingDto.getEnd() == null
+                || bookingDto.getStart() == null
+                || bookingDto.getEnd().isBefore(LocalDateTime.now())
+                || bookingDto.getStart().isBefore(LocalDateTime.now())
+                || bookingDto.getEnd().isBefore(bookingDto.getStart())
+                || bookingDto.getEnd().equals(bookingDto.getStart())) {
+            throw new IncorrectDateException("Некорректная дата аренды");
+        }
+        if (!itemDto.getAvailable()) {
+            throw new ItemNotAvailableException("Данная вещь в настоящий момент занята");
+        }
+        if (userId == itemDto.getOwner().getId()) {
+            throw new IllegalBookingAttemptException("Владелец вещи не может бронировать свою вещь");
         }
     }
 
-    private void checkIfUserExists(Long userId) {
-        try {
-            User user = userRepository.getReferenceById(userId);
-            System.out.println(user);
-        } catch (EntityNotFoundException e) {
-            throw new UserDoesNotExistException("Пользователя с таким id не существует");
-        }
+    private void checkIfUserExists(long userId) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new UserDoesNotExistException("Пользователя с таким id не существует"));
     }
 }

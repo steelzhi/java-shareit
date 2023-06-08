@@ -20,15 +20,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User getUser(Long userId) {
-        List<User> users = getUsers();
-        for (User user : users) {
-            if (user.getId().equals(userId)) {
-                return user;
-            }
-        }
-
-        throw new UserDoesNotExistException("Пользователя с id = " + userId + " не существует.");
+    public User getUser(long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new UserDoesNotExistException("Пользователя с id = " + userId + " не существует."));
     }
 
     @Override
@@ -36,9 +30,9 @@ public class UserServiceImpl implements UserService {
         return userRepository.save(user);
     }
 
-
     @Override
-    public User patchUser(Long id, User user) {
+    @Transactional
+    public User patchUser(long id, User user) {
         User existingUser = getUser(id);
         user.setId(id);
         if (user.getName() == null) {
@@ -52,7 +46,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void deleteUser(Long userId) {
-        userRepository.deleteAllByIdInBatch(List.of(userId));
+    public void deleteUser(long userId) {
+        userRepository.deleteById(userId);
     }
 }

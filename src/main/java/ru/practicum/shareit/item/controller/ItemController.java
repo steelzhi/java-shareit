@@ -19,25 +19,25 @@ public class ItemController {
     private final ItemService itemService;
 
     @PostMapping
-    public Item postItem(@Valid @RequestBody Item item, @RequestHeader("X-Sharer-User-Id") Long userId) {
+    public Item postItem(@Valid @RequestBody Item item, @RequestHeader("X-Sharer-User-Id") long userId) {
         return itemService.postItemDto(item, userId);
     }
 
     @PatchMapping("/{itemId}")
-    public Item patchItem(@PathVariable Long itemId,
+    public Item patchItem(@PathVariable long itemId,
                           @RequestBody Item item,
-                          @RequestHeader("X-Sharer-User-Id") Long userId) {
+                          @RequestHeader("X-Sharer-User-Id") long userId) {
         return itemService.patchItemDto(itemId, item, userId);
     }
 
     @GetMapping("/{itemId}")
-    public ItemDto getItemDtoById(@PathVariable Long itemId,
-                                  @RequestHeader("X-Sharer-User-Id") Long userId) {
+    public ItemDto getItemDtoById(@PathVariable long itemId,
+                                  @RequestHeader("X-Sharer-User-Id") long userId) {
         return itemService.getItemDtoById(itemId, userId);
     }
 
     @GetMapping
-    public List<ItemDto> getAllItemsDtoByUser(@RequestHeader("X-Sharer-User-Id") Long userId) {
+    public List<ItemDto> getAllItemsDtoByUser(@RequestHeader("X-Sharer-User-Id") long userId) {
         return itemService.getAllItemsDtoByUser(userId);
     }
 
@@ -47,9 +47,9 @@ public class ItemController {
     }
 
     @PostMapping("/{itemId}/comment")
-    public CommentDto postComment(@PathVariable Long itemId,
+    public CommentDto postComment(@PathVariable long itemId,
                                   @RequestBody Comment comment,
-                                  @RequestHeader("X-Sharer-User-Id") Long userId) {
+                                  @RequestHeader("X-Sharer-User-Id") long userId) {
         return itemService.postComment(itemId, comment, userId);
     }
 }

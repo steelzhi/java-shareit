@@ -132,7 +132,7 @@ public class BookingJpaRepositoryTests {
                 null);
         bookingRepository.save(booking4);
 
-        List<Booking> bookingsForUser1Items = bookingRepository.getAllBookingsForUserItems(1L);
+        List<Booking> bookingsForUser1Items = bookingRepository.getAllBookingsForOwnerItems(1L);
         assertTrue(bookingsForUser1Items.size() == 2,
                 "Некорректный размер списка бронирования предметов пользователя с id = 1");
         assertEquals(bookingsForUser1Items, List.of(booking2, booking4),
@@ -159,7 +159,7 @@ public class BookingJpaRepositoryTests {
 
     @Test
     void getAllBookingsForItemId() {
-        List<Booking> allBookingsForItem2 = bookingRepository.getAllBookingsForItem_Id(2L);
+        List<Booking> allBookingsForItem2 = bookingRepository.findAllBookingsByItem_Id(2L);
         assertEquals(allBookingsForItem2.size(), 1,
                 "Некорректный размер списка бронирования предмета с id = 2");
         assertEquals(allBookingsForItem2, List.of(booking2),

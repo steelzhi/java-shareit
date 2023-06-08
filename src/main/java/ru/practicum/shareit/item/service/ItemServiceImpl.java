@@ -2,6 +2,7 @@ package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
@@ -33,14 +34,16 @@ public class ItemServiceImpl implements ItemService {
     private final CommentRepository commentRepository;
 
     @Override
-    public Item postItemDto(Item item, Long userId) {
-        checkIfUserExists(userId, userRepository.findAll());
-        item.setOwner(userRepository.findById(userId).get());
+    @Transactional
+    public Item postItemDto(Item item, long userId) {
+        User user = checkAndGetUserIfExists(userId);
+        item.setOwner(user);
         return itemRepository.save(item);
     }
 
     @Override
-    public Item patchItemDto(Long itemId, Item item, Long userId) {
+    @Transactional
+    public Item patchItemDto(long itemId, Item item, long userId) {
         checkIfUserAndItemExists(userId, itemId);
         checkIfUserHasRightToPatchOrGetBookings(itemId, userId);
         item.setId(itemId);
@@ -65,20 +68,16 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public ItemDto getItemDtoById(Long itemId, Long userId) {
-        List<Item> items = itemRepository.findAll();
-        for (Item item : items) {
-            if (item.getId().equals(itemId)) {
-                return getItemDtoWithBookingsAndComments(item, userId);
-            }
-        }
+    public ItemDto getItemDtoById(long itemId, long userId) {
+        Item item = getItem(itemId);
 
-        throw new ItemDoesNotExistException("Вещи с id = " + itemId + " не существует.");
+        return getItemDtoWithBookingsAndComments(item, userId);
     }
 
     @Override
-    public List<ItemDto> getAllItemsDtoByUser(Long userId) {
-        checkIfUserExists(userId, userRepository.findAll());
+    @Transactional(readOnly = true)
+    public List<ItemDto> getAllItemsDtoByUser(long userId) {
+        checkAndGetUserIfExists(userId);
         List<Item> itemsList = itemRepository.findAllByOwner_Id(userId);
         List<ItemDto> itemDtoList = new ArrayList<>();
         for (Item item : itemsList) {
@@ -107,28 +106,24 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public CommentDto postComment(Long itemId, Comment comment, Long userId) {
+    @Transactional
+    public CommentDto postComment(long itemId, Comment comment, long userId) {
         if (comment.getText().isBlank()) {
             throw new EmptyCommentException("Комментарий не может быть пустым.");
         }
 
         Item item = getItem(itemId);
         User author = userRepository.getReferenceById(userId);
-        List<Booking> allBookingsForItem = bookingRepository.getAllBookingsForItem_Id(itemId);
+        List<Booking> allBookingsForItem = bookingRepository.findAllBookingsByItem_Id(itemId);
         LocalDateTime now = LocalDateTime.now().plusSeconds(1);
         for (Booking booking : allBookingsForItem) {
-            if (booking.getBooker().getId().equals(userId) && booking.getEnd().isBefore(now)) {
+            if (booking.getBooker().getId() == userId && booking.getEnd().isBefore(now)) {
                 comment.setItem(item);
                 comment.setAuthor(author);
                 comment.setCreated(now);
-                try {
-                    Comment savedComment = commentRepository.save(comment);
-                    return CommentMapper.mapToCommentDto(savedComment);
 
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return null;
-                }
+                Comment savedComment = commentRepository.save(comment);
+                return CommentMapper.mapToCommentDto(savedComment);
             }
         }
 
@@ -136,41 +131,32 @@ public class ItemServiceImpl implements ItemService {
                 userId + " либо аренда еще не завершилась.");
     }
 
-    private void checkIfUserExists(Long userId, List<User> users) {
-        for (User user : users) {
-            if (user.getId().equals(userId)) {
-                return;
-            }
-        }
-
-        throw new UserDoesNotExistException("Пользователя с указанным id не существует.");
+    private User checkAndGetUserIfExists(long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new UserDoesNotExistException("Пользователя с таким id не существует"));
     }
 
-    private List<Item> getAllItemsByUser(Long userId) {
-        checkIfUserExists(userId, userRepository.findAll());
+    @Transactional(readOnly = true)
+    private List<Item> getAllItemsByOwner(long userId) {
+        checkAndGetUserIfExists(userId);
         return itemRepository.findAllByOwner_Id(userId);
     }
 
-    private Item getItem(Long itemId) {
-        List<Item> items = itemRepository.findAll();
-        for (Item item : items) {
-            if (item.getId().equals(itemId)) {
-                return item;
-            }
-        }
-
-        throw new ItemDoesNotExistException("Вещи с id = " + itemId + " не существует.");
+    private Item getItem(long itemId) {
+        return itemRepository.findById(itemId)
+                .orElseThrow(() -> new ItemDoesNotExistException("Вещи с id = " + itemId + " не существует."));
     }
 
-    private boolean isUserOwnerOfItem(Long itemId, Long userId) {
+    private boolean isUserOwnerOfItem(long itemId, long userId) {
         Item item = itemRepository.getReferenceById(itemId);
-        if (item.getOwner().getId().equals(userId)) {
+        if (item.getOwner().getId() == userId) {
             return true;
         }
         return false;
     }
 
-    private ItemDto getItemDtoWithBookingsAndComments(Item item, Long userId) {
+    @Transactional(readOnly = true)
+    private ItemDto getItemDtoWithBookingsAndComments(Item item, long userId) {
         List<BookingDto> ownersBookings = BookingMapper.mapToBookingDto(
                 bookingRepository.getAllBookingsByOwner_IdAndItem_Id(userId, item.getId()));
         List<BookingDto> pastBookings = new ArrayList<>();
@@ -217,14 +203,14 @@ public class ItemServiceImpl implements ItemService {
         return ItemMapper.mapToItemDto(item, lastBookingDto, nextBookingDto, comments);
     }
 
-    private void checkIfUserAndItemExists(Long userId, Long itemId) {
-        List<Item> userItems = getAllItemsByUser(userId);
+    private void checkIfUserAndItemExists(long userId, long itemId) {
+        List<Item> userItems = getAllItemsByOwner(userId);
         if (userItems.isEmpty()) {
             throw new UserDoesNotExistOrDoesNotHaveAnyItemsException(
                     "Пользователя с указанным id не существует либо пользователь не добавил ни одной вещи.");
         }
         for (Item item : userItems) {
-            if (item.getId().equals(itemId)) {
+            if (item.getId() == itemId) {
                 return;
             }
         }
@@ -232,9 +218,9 @@ public class ItemServiceImpl implements ItemService {
         throw new ItemDoesNotExistException("Вещи с указанным id не существует.");
     }
 
-    private void checkIfUserHasRightToPatchOrGetBookings(Long itemId, Long userId) {
+    private void checkIfUserHasRightToPatchOrGetBookings(long itemId, long userId) {
         Item item = itemRepository.getReferenceById(itemId);
-        if (!item.getOwner().getId().equals(userId)) {
+        if (item.getOwner().getId() != userId) {
             throw new IllegalAccessException("Пользователь с id = " + userId + " не является собственником " +
                     "вещи с id = " + item.getId() + " и не имеет прав ее изменение");
         }

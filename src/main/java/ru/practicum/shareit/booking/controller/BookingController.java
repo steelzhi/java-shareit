@@ -17,32 +17,32 @@ public class BookingController {
 
     @PostMapping
     public Booking createBooking(@RequestBody BookingDto bookingDto,
-                                 @RequestHeader("X-Sharer-User-Id") Long userId) {
+                                 @RequestHeader("X-Sharer-User-Id") long userId) {
         return bookingService.createBooking(bookingDto, userId);
     }
 
     @PatchMapping("/{bookingId}")
-    public Booking patchBookingWithUpdatedStatus(@PathVariable Long bookingId,
+    public Booking patchBookingWithUpdatedStatus(@PathVariable long bookingId,
                                                  @RequestParam("approved") Boolean approved,
-                                                 @RequestHeader("X-Sharer-User-Id") Long userId) {
+                                                 @RequestHeader("X-Sharer-User-Id") long userId) {
         return bookingService.patchBookingWithUpdatedStatus(bookingId, userId, approved);
     }
 
     @GetMapping("/{bookingId}")
-    public Booking getBooking(@PathVariable Long bookingId, @RequestHeader("X-Sharer-User-Id") Long userId) {
+    public Booking getBooking(@PathVariable long bookingId, @RequestHeader("X-Sharer-User-Id") long userId) {
         return bookingService.getBooking(bookingId, userId);
     }
 
     @GetMapping
     public List<Booking> getAllBookingsByUser(
-            @RequestHeader("X-Sharer-User-Id") Long userId,
+            @RequestHeader("X-Sharer-User-Id") long userId,
             @RequestParam(name = "state", required = false) String bookingStatus) {
         return bookingService.getAllBookingsByUser(userId, bookingStatus);
     }
 
     @GetMapping("/owner")
     public List<Booking> getAllBookingsForUserItems(
-            @RequestHeader("X-Sharer-User-Id") Long userId,
+            @RequestHeader("X-Sharer-User-Id") long userId,
             @RequestParam(name = "state", required = false) String bookingStatus) {
         return bookingService.getAllBookingsForUserItems(userId, bookingStatus);
     }
