@@ -8,38 +8,36 @@ import lombok.NoArgsConstructor;
 import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.time.LocalDateTime;
 
 @Data
-@AllArgsConstructor
-@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 @Entity
-@Table(name = "items")
+@Table(name = "comments")
 @JsonIgnoreProperties({"hibernateLazyInitializer"})
-public class Item {
+@Builder
+public class Comment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
-    @Column(name = "name")
-    private String name;
+    @Column(name = "text")
+    private String text;
 
-    @NotBlank
-    @Column(name = "description")
-    private String description;
-
-    @Column(name = "is_available")
     @NotNull
-    private Boolean available;
-
+    @JoinColumn(name = "item_id")
     @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User owner;
+    private Item item;
 
-    @Column(name = "request_id")
-    private Long request;
+    @NotNull
+    @JoinColumn(name = "author_id")
+    @ManyToOne
+    private User author;
+
+    @NotNull
+    @Column(name = "created")
+    private LocalDateTime created;
 }

@@ -7,13 +7,11 @@ import java.util.List;
 public interface UserService {
     List<User> getUsers();
 
-    User getUser(Long userId);
+    User getUser(long userId);
 
     User postUser(User user);
 
-    User patchUser(Long id, User user);
+    User patchUser(long id, User user);
 
-    void deleteUser(Long userId);
-
-    void checkIfEmailIsDuplicate(Long id, User user, List<User> users);
+    void deleteUser(long userId);
 }

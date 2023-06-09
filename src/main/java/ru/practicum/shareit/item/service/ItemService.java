@@ -1,26 +1,25 @@
 package ru.practicum.shareit.item.service;
 
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.item.model.Comment;
+import ru.practicum.shareit.item.model.Item;
 
 import java.util.List;
-import java.util.Map;
 
 @Service
 public interface ItemService {
 
-    ItemDto postItemDto(ItemDto itemDto, Long userId);
+    Item postItemDto(Item item, long userId);
 
-    ItemDto patchItemDto(Long itemId, ItemDto itemDto, Long userId);
+    Item patchItemDto(long itemId, Item item, long userId);
 
-    ItemDto getItemDto(Long itemId);
+    ItemDto getItemDtoById(long itemId, long userId);
 
-    List<ItemDto> getAllItemsDtoByUser(Long userId);
+    List<ItemDto> getAllItemsDtoByUser(long userId);
 
-    List<ItemDto> searchItems(String text);
+    List<Item> searchItems(String text);
 
-    void checkIfUserExists(Long userId, List<User> users);
-
-    void checkIfUserAndItemExists(Long userId, Long itemDtoId, Map<Long, Map<Long, ItemDto>> items);
+    CommentDto postComment(long itemId, Comment comment, long userId);
 }

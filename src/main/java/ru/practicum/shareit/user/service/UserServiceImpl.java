@@ -2,7 +2,8 @@ package ru.practicum.shareit.user.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exception.DuplicateEmailException;
+import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.exception.UserDoesNotExistException;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
@@ -15,50 +16,37 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<User> getUsers() {
-        return userRepository.getUsers();
+        return userRepository.findAll();
     }
 
     @Override
-    public User getUser(Long userId) {
-        return userRepository.getUser(userId);
+    public User getUser(long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new UserDoesNotExistException("Пользователя с id = " + userId + " не существует."));
     }
 
     @Override
     public User postUser(User user) {
-        checkIfEmailIsDuplicate(null, user, getUsers());
-        return userRepository.postUser(user);
+        return userRepository.save(user);
     }
 
     @Override
-    public User patchUser(Long id, User user) {
-        checkIfEmailIsDuplicate(id, user, getUsers());
-        return userRepository.patchUser(id, user);
-    }
-
-    @Override
-    public void deleteUser(Long userId) {
-        userRepository.deleteUser(userId);
-    }
-
-    @Override
-    public void checkIfEmailIsDuplicate(Long id, User user, List<User> users) {
-        String email = user.getEmail();
-
-        // Проверка совпадения для нового пользователя (при добавлении пользователя)
-        if (id == null) {
-            for (User existingUser : users) {
-                if (existingUser.getEmail().equals(email)) {
-                    throw new DuplicateEmailException("Пользователь с указанным email уже существует.");
-                }
-            }
+    @Transactional
+    public User patchUser(long id, User user) {
+        User existingUser = getUser(id);
+        user.setId(id);
+        if (user.getName() == null) {
+            user.setName(existingUser.getName());
         }
-
-        // Проверка совпадения для существующего пользователя (при изменении пользователя)
-        for (User existingUser : users) {
-            if (existingUser.getEmail().equals(email) && !existingUser.getId().equals(id)) {
-                throw new DuplicateEmailException(
-                        "Нельзя изменить email на указанный - пользователь с таким email уже существует.");
-            }
+        if (user.getEmail() == null) {
+            user.setEmail(existingUser.getEmail());
         }
+        return userRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    public void deleteUser(long userId) {
+        userRepository.deleteById(userId);
     }
 }

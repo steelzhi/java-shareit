@@ -1,0 +1,194 @@
+package ru.practicum.shareit.booking.service;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.booking.dto.BookingDto;
+import ru.practicum.shareit.booking.mapper.BookingMapper;
+import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.repository.BookingRepository;
+import ru.practicum.shareit.booking.status.BookingStatus;
+import ru.practicum.shareit.exception.IllegalAccessException;
+import ru.practicum.shareit.exception.*;
+import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.user.repository.UserRepository;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class BookingServiceImpl implements BookingService {
+
+    private final BookingRepository bookingRepository;
+    private final UserRepository userRepository;
+    private final ItemRepository itemDtoRepository;
+    private final long delay = 500_000_000;
+
+    @Override
+    @Transactional
+    public Booking createBooking(BookingDto bookingDto, long userId) {
+        checkIfTheItemIsAvailableAntOtherParamsAreCorrect(bookingDto, userId);
+        bookingDto.setStatus(BookingStatus.WAITING);
+        Long itemDtoId = bookingDto.getItemId();
+        Booking booking = BookingMapper.mapToBooking(bookingDto, itemDtoRepository.getReferenceById(itemDtoId),
+                userRepository.getReferenceById(userId));
+        return bookingRepository.save(booking);
+    }
+
+    @Override
+    @Transactional
+    public Booking patchBookingWithUpdatedStatus(long bookingId, long userId, Boolean approved) {
+        Booking booking = getBookingIfUserHasPatchingRights(bookingId, userId);
+        BookingStatus currentStatus = booking.getStatus();
+        String statusName = (approved == true) ? BookingStatus.APPROVED.name() : BookingStatus.REJECTED.name();
+        BookingStatus newStatus = BookingStatus.valueOf(statusName);
+        if (currentStatus == newStatus) {
+            throw new DuplicateStatusException("Данный статус уже установлен ранее.");
+        }
+
+        booking.setStatus(newStatus);
+        bookingRepository.save(booking);
+
+        return bookingRepository.getReferenceById(bookingId);
+    }
+
+    @Override
+    public Booking getBooking(long bookingId, long userId) {
+        return getBookingIfUserHasAccessRights(bookingId, userId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Booking> getAllBookingsByUser(long userId, String bookingStatus) {
+        checkIfUserExists(userId);
+
+        List<Booking> userBookings = bookingRepository.getAllBookingsByBooker_Id(userId);
+        return getBookingsWithDemandedStatus(userBookings, bookingStatus);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Booking> getAllBookingsForUserItems(long userId, String bookingStatus) {
+        checkIfUserExists(userId);
+
+        List<Booking> itemBookings =
+                bookingRepository.getAllBookingsForOwnerItems(userId);
+        return getBookingsWithDemandedStatus(itemBookings, bookingStatus);
+    }
+
+    private List<Booking> getBookingsWithDemandedStatus(List<Booking> bookings, String status) {
+        List<Booking> userBookingsWithDemandedStatus = new ArrayList<>();
+        if (status == null) {
+            status = "ALL";
+        }
+
+        BookingStatus bookingStatus;
+        try {
+            bookingStatus = BookingStatus.valueOf(status);
+        } catch (IllegalArgumentException e) {
+            throw new WrongBookingStatusException("Введен некорректный статус бронирования");
+        }
+
+        for (Booking booking : bookings) {
+            LocalDateTime now = LocalDateTime.now().minusNanos(delay);
+
+            switch (bookingStatus) {
+                case CURRENT:
+                    if (booking.getStart().isBefore(now) && booking.getEnd().isAfter(now)) {
+                        userBookingsWithDemandedStatus.add(booking);
+                    }
+                    break;
+                case PAST:
+                    if (booking.getEnd().isBefore(now)) {
+                        userBookingsWithDemandedStatus.add(booking);
+                    }
+                    break;
+                case FUTURE:
+                    if (booking.getStart().isAfter(now)) {
+                        userBookingsWithDemandedStatus.add(booking);
+                    }
+                    break;
+                case WAITING:
+                    if (booking.getStatus() == BookingStatus.WAITING) {
+                        userBookingsWithDemandedStatus.add(booking);
+                    }
+                    break;
+                case REJECTED:
+                    if (booking.getStatus() == BookingStatus.REJECTED) {
+                        userBookingsWithDemandedStatus.add(booking);
+                    }
+                    break;
+                case ALL:
+                    userBookingsWithDemandedStatus.add(booking);
+            }
+        }
+        return getBookingSortedByDateTime(userBookingsWithDemandedStatus);
+    }
+
+    @Transactional(readOnly = true)
+    private Booking getBookingIfUserHasAccessRights(long bookingId, long userId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new BookingDoesNotExistException("Бронирования с id = " + bookingId + "не найдено."));
+        Item itemDto = itemDtoRepository.getReferenceById(booking.getItem().getId());
+        if (booking.getBooker().getId() != userId && itemDto.getOwner().getId() != userId) {
+            throw new IllegalAccessException(
+                    "Пользователь с id = " + userId + " не имеет права доступа к информации о вещи с id = " + booking);
+        }
+        return booking;
+    }
+
+    @Transactional(readOnly = true)
+    private Booking getBookingIfUserHasPatchingRights(long bookingId, long userId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new BookingDoesNotExistException("Бронирования с id = " + bookingId + "не найдено."));
+        Item itemDto = itemDtoRepository.getReferenceById(booking.getItem().getId());
+        if (itemDto.getOwner().getId() != userId) {
+            throw new IllegalAccessException(
+                    "Пользователь с id = " + userId + " не имеет права доступа к информации о бронировании с id = "
+                            + booking);
+        }
+        return booking;
+    }
+
+    private List<Booking> getBookingSortedByDateTime(List<Booking> unsortedBookings) {
+        unsortedBookings.sort((booking1, booking2) -> {
+            if (booking1.getEnd().isAfter(booking2.getEnd())) {
+                return -1;
+            } else {
+                return 1;
+            }
+        });
+        return unsortedBookings;
+    }
+
+    @Transactional(readOnly = true)
+    private void checkIfTheItemIsAvailableAntOtherParamsAreCorrect(BookingDto bookingDto, long userId) {
+        checkIfUserExists(userId);
+
+        Item itemDto = itemDtoRepository.findById(bookingDto.getItemId())
+                .orElseThrow(() -> new ItemDoesNotExistException("Вещи с таким id не существует"));
+
+        if (bookingDto.getEnd() == null
+                || bookingDto.getStart() == null
+                || bookingDto.getEnd().isBefore(LocalDateTime.now())
+                || bookingDto.getStart().isBefore(LocalDateTime.now())
+                || bookingDto.getEnd().isBefore(bookingDto.getStart())
+                || bookingDto.getEnd().equals(bookingDto.getStart())) {
+            throw new IncorrectDateException("Некорректная дата аренды");
+        }
+        if (!itemDto.getAvailable()) {
+            throw new ItemNotAvailableException("Данная вещь в настоящий момент занята");
+        }
+        if (userId == itemDto.getOwner().getId()) {
+            throw new IllegalBookingAttemptException("Владелец вещи не может бронировать свою вещь");
+        }
+    }
+
+    private void checkIfUserExists(long userId) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new UserDoesNotExistException("Пользователя с таким id не существует"));
+    }
+}
