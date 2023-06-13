@@ -57,8 +57,8 @@ public class ItemServiceImpl implements ItemService {
         if (item.getAvailable() == null) {
             item.setAvailable(existingItemDto.getAvailable());
         }
-        if (item.getRequest() == null) {
-            item.setRequest(existingItemDto.getRequest());
+        if (item.getRequestId() == null) {
+            item.setRequestId(existingItemDto.getRequestId());
         }
         if (item.getOwner() == null) {
             item.setOwner(existingItemDto.getOwner());

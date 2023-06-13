@@ -16,4 +16,6 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
             "OR UPPER(i.description) LIKE UPPER(CONCAT('%', ?1, '%')) " +
             "AND i.available = true")
     List<Item> searchItems(String text);
+
+    List<Item> findAllByRequest_Id(long requestId);
 }

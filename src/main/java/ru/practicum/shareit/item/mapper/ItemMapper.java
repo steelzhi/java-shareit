@@ -19,7 +19,7 @@ public class ItemMapper {
                 item.getDescription(),
                 item.getAvailable(),
                 item.getOwner(),
-                item.getRequest(),
+                item.getRequestId(),
                 lastBookingDto,
                 nextBookingDto,
                 CommentMapper.mapToCommentDto(comments)
