@@ -16,6 +16,7 @@ import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.request.repository.ItemRequestRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
+import ru.practicum.shareit.util.Pagination;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -47,7 +48,8 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
     @Override
     public List<ItemRequestDto> getPagedRequestsMadeByOtherUsers(long userId, Integer from, Integer size) {
-        checkIfPaginationParamsAreNotCorrect(from, size);
+        Pagination.checkIfPaginationParamsAreNotCorrect(from, size);
+
         List<ItemRequest> itemRequests;
         if (from != null && size != null) {
             PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size, Sort.by("created").ascending());
@@ -92,14 +94,5 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         if (itemRequest.getDescription() == null || itemRequest.getDescription().isBlank()) {
             throw new EmptyDescriptionException("Описание в запросе не должно быть пустым");
         }
-    }
-
-    private void checkIfPaginationParamsAreNotCorrect(Integer from, Integer size) {
-        if ((from == null && size == null)
-                || (from >= 0 && size > 0)) {
-            return;
-        }
-
-        throw new IncorrectPaginationException("Введены некорректные параметры для пагинации");
     }
 }

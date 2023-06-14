@@ -17,6 +17,7 @@ import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.user.repository.UserRepository;
+import ru.practicum.shareit.util.Pagination;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -68,11 +69,11 @@ public class BookingServiceImpl implements BookingService {
     @Transactional(readOnly = true)
     public List<Booking> getAllBookingsByUser(long userId, String bookingStatus, Integer from, Integer size) {
         checkIfUserExists(userId);
-        checkIfPaginationParamsAreNotCorrect(from, size);
+        Pagination.checkIfPaginationParamsAreNotCorrect(from, size);
 
         List<Booking> userBookings;
         if (from != null && size != null)  {
-            PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size, Sort.by("id").ascending());
+            PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size, Sort.by("id").descending());
             userBookings = bookingRepository
                     .getAllBookingsByBooker_Id(userId, page)
                     .getContent();
@@ -81,33 +82,17 @@ public class BookingServiceImpl implements BookingService {
         }
 
         return getBookingsWithDemandedStatus(userBookings, bookingStatus);
-
-
-/*        List<ItemRequest> itemRequests;
-        if (from != null && size != null) {
-            PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size, Sort.by("created").ascending());
-            itemRequests = itemRequestRepository
-                    .findAllByRequester_IdNot(userId, page)
-                    .getContent();
-        } else {
-            itemRequests = itemRequestRepository.findAllByRequester_IdNot(userId);
-        }
-        List<ItemRequestDto> itemRequestDtos = getItemRequestDtos(itemRequests);
-        return itemRequestDtos;*/
-
-        //List<Booking> userBookings = bookingRepository.getAllBookingsByBooker_Id(userId);
-        //return getBookingsWithDemandedStatus(userBookings, bookingStatus);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Booking> getAllBookingsForUserItems(long userId, String bookingStatus, Integer from, Integer size) {
         checkIfUserExists(userId);
-        checkIfPaginationParamsAreNotCorrect(from, size);
+        Pagination.checkIfPaginationParamsAreNotCorrect(from, size);
 
         List<Booking> itemBookings;
         if (from != null && size != null)  {
-            PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size, Sort.by("id").ascending());
+            PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size, Sort.by("id").descending());
             itemBookings = bookingRepository
                     .getAllBookingsForOwnerItems(userId, page)
                     .getContent();
@@ -115,9 +100,6 @@ public class BookingServiceImpl implements BookingService {
             itemBookings = bookingRepository.getAllBookingsForOwnerItems(userId);
         }
 
-
-        //List<Booking> itemBookings =
-                //bookingRepository.getAllBookingsForOwnerItems(userId);
         return getBookingsWithDemandedStatus(itemBookings, bookingStatus);
     }
 
@@ -232,14 +214,5 @@ public class BookingServiceImpl implements BookingService {
     private void checkIfUserExists(long userId) {
         userRepository.findById(userId)
                 .orElseThrow(() -> new UserDoesNotExistException("Пользователя с таким id не существует"));
-    }
-
-    private void checkIfPaginationParamsAreNotCorrect(Integer from, Integer size) {
-        if ((from == null && size == null)
-                || (from >= 0 && size > 0)) {
-            return;
-        }
-
-        throw new IncorrectPaginationException("Введены некорректные параметры для пагинации");
     }
 }

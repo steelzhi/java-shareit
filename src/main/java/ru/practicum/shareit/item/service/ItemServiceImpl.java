@@ -1,6 +1,8 @@
 package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingDto;
@@ -20,6 +22,7 @@ import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
+import ru.practicum.shareit.util.Pagination;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -76,9 +79,20 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ItemDto> getAllItemsDtoByUser(long userId) {
+    public List<ItemDto> getAllItemsDtoByUser(long userId, Integer from, Integer size) {
         checkAndGetUserIfExists(userId);
-        List<Item> itemsList = itemRepository.findAllByOwner_Id(userId);
+        Pagination.checkIfPaginationParamsAreNotCorrect(from, size);
+
+        List<Item> itemsList;
+        if (from != null && size != null) {
+            PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size, Sort.by("id").descending());
+            itemsList = itemRepository
+                    .findAllByOwner_Id(userId, page)
+                    .getContent();
+        } else {
+            itemsList = itemRepository.findAllByOwner_Id(userId);
+        }
+
         List<ItemDto> itemDtoList = new ArrayList<>();
         for (Item item : itemsList) {
             itemDtoList.add(getItemDtoWithBookingsAndComments(item, userId));
@@ -96,10 +110,19 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<Item> searchItems(String text) {
+    public List<Item> searchItems(String text, Integer from, Integer size) {
+        Pagination.checkIfPaginationParamsAreNotCorrect(from, size);
+
         List<Item> foundBySearch = new ArrayList<>();
         if (!text.isBlank()) {
-            foundBySearch = itemRepository.searchItems(text);
+            if (from != null && size != null) {
+                PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size, Sort.by("id").descending());
+                foundBySearch = itemRepository
+                        .searchItems(text, page)
+                        .getContent();
+            } else {
+                foundBySearch = itemRepository.searchItems(text);
+            }
         }
 
         return foundBySearch;
