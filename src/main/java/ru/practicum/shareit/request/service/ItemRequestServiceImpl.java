@@ -1,7 +1,12 @@
 package ru.practicum.shareit.request.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.exception.EmptyDescriptionException;
+import ru.practicum.shareit.exception.IncorrectPaginationException;
+import ru.practicum.shareit.exception.RequestDoesNotExistException;
 import ru.practicum.shareit.exception.UserDoesNotExistException;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
@@ -25,10 +30,43 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
     @Override
     public ItemRequest postItemRequest(long userId, ItemRequest itemRequest) {
-        checkAndGetUserIfExists(userId);
-        itemRequest.setRequesterId(userId);
+        checkIfDescriptionIsBlank(itemRequest);
+        User requester = checkAndGetUserIfExists(userId);
+        itemRequest.setRequester(requester);
         itemRequest.setCreated(LocalDateTime.now());
         return itemRequestRepository.save(itemRequest);
+    }
+
+    @Override
+    public List<ItemRequestDto> getAllRequestsMadeByRequester(long userId) {
+        checkAndGetUserIfExists(userId);
+        List<ItemRequest> requestersRequests = itemRequestRepository.findAllByRequester_Id(userId);
+        List<ItemRequestDto> itemRequestDtos = getItemRequestDtos(requestersRequests);
+        return itemRequestDtos;
+    }
+
+    @Override
+    public List<ItemRequestDto> getPagedRequestsMadeByOtherUsers(long userId, Integer from, Integer size) {
+        checkIfPaginationParamsAreNotCorrect(from, size);
+        List<ItemRequest> itemRequests;
+        if (from != null && size != null) {
+            PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size, Sort.by("created").ascending());
+            itemRequests = itemRequestRepository
+                    .findAllByRequester_IdNot(userId, page)
+                    .getContent();
+        } else {
+            itemRequests = itemRequestRepository.findAllByRequester_IdNot(userId);
+        }
+        List<ItemRequestDto> itemRequestDtos = getItemRequestDtos(itemRequests);
+        return itemRequestDtos;
+    }
+
+    @Override
+    public ItemRequestDto getRequestDto(long userId, long requestId) {
+        checkAndGetUserIfExists(userId);
+        ItemRequest itemRequest = itemRequestRepository.findById(requestId)
+                .orElseThrow(() -> new RequestDoesNotExistException("Запроса с указанным id не существует"));
+        return ItemRequestMapper.mapToItemRequestDto(itemRequest, getAllProposedItemsForRequest(requestId));
     }
 
     private User checkAndGetUserIfExists(long userId) {
@@ -36,11 +74,13 @@ public class ItemRequestServiceImpl implements ItemRequestService {
                 .orElseThrow(() -> new UserDoesNotExistException("Пользователя с таким id не существует"));
     }
 
-    @Override
-    public List<ItemRequestDto> getAllRequestsMadeByRequester(long userId) {
-        List<ItemRequest> requestersRequests = itemRequestRepository.findAllByRequester_Id(userId);
+    private List<Item> getAllProposedItemsForRequest(long requestId) {
+        return itemRepository.findAllByRequestId(requestId);
+    }
+
+    private List<ItemRequestDto> getItemRequestDtos(List<ItemRequest> itemRequests) {
         List<ItemRequestDto> itemRequestDtos = new ArrayList<>();
-        for (ItemRequest itemRequest : requestersRequests) {
+        for (ItemRequest itemRequest : itemRequests) {
             List<Item> proposedItems = getAllProposedItemsForRequest(itemRequest.getId());
             ItemRequestDto itemRequestDto = ItemRequestMapper.mapToItemRequestDto(itemRequest, proposedItems);
             itemRequestDtos.add(itemRequestDto);
@@ -48,7 +88,18 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         return itemRequestDtos;
     }
 
-    private List<Item> getAllProposedItemsForRequest(long requestId) {
-        return itemRepository.findAllByRequest_Id(requestId);
+    private void checkIfDescriptionIsBlank(ItemRequest itemRequest) {
+        if (itemRequest.getDescription() == null || itemRequest.getDescription().isBlank()) {
+            throw new EmptyDescriptionException("Описание в запросе не должно быть пустым");
+        }
+    }
+
+    private void checkIfPaginationParamsAreNotCorrect(Integer from, Integer size) {
+        if ((from == null && size == null)
+                || (from >= 0 && size > 0)) {
+            return;
+        }
+
+        throw new IncorrectPaginationException("Введены некорректные параметры для пагинации");
     }
 }

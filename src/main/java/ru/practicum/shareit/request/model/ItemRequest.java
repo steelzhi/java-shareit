@@ -1,23 +1,23 @@
 package ru.practicum.shareit.request.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "item_request")
+@Table(name = "item_requests")
 @Builder
 @JsonIgnoreProperties({"hibernateLazyInitializer"})
 public class ItemRequest {
@@ -27,15 +27,16 @@ public class ItemRequest {
     @Column(name = "id")
     private Long id;
 
-    @NotBlank
-    @Column(name = "requester_id")
-    private Long requesterId;
+    @JoinColumn(name = "requester_id")
+    @ManyToOne
+    private User requester;
 
     @NotBlank
-    @Column(name = "item_description")
-    private String itemDescription;
+    @Column(name = "description")
+    private String description;
 
     @NotNull
     @Column(name = "created")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime created;
 }

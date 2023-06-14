@@ -35,7 +35,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional
-    public Item postItemDto(Item item, long userId) {
+    public Item postItem(Item item, long userId) {
         User user = checkAndGetUserIfExists(userId);
         item.setOwner(user);
         return itemRepository.save(item);
@@ -43,7 +43,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional
-    public Item patchItemDto(long itemId, Item item, long userId) {
+    public Item patchItem(long itemId, Item item, long userId) {
         checkIfUserAndItemExists(userId, itemId);
         checkIfUserHasRightToPatchOrGetBookings(itemId, userId);
         item.setId(itemId);

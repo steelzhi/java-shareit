@@ -81,4 +81,22 @@ public class ErrorHandler {
     public ErrorResponse handleEmptyComment(final EmptyCommentException e) {
         return new ErrorResponse("Комментарий не может быть пустым", e.getMessage());
     }
+
+    @ExceptionHandler()
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleRequestDoesNotExist(final RequestDoesNotExistException e) {
+        return new ErrorResponse("Запрос не найден", e.getMessage());
+    }
+
+    @ExceptionHandler()
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleEmptyDescription(final EmptyDescriptionException e) {
+        return new ErrorResponse("Описание запроса не может быть пустым", e.getMessage());
+    }
+
+    @ExceptionHandler()
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleIncorrectPagination(final IncorrectPaginationException e) {
+        return new ErrorResponse("Параметры пагинации должны быть >= 0", e.getMessage());
+    }
 }

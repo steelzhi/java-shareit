@@ -19,7 +19,7 @@ public class ItemDto {
     private String description;
     private Boolean available;
     private User owner;
-    private Long request;
+    private Long requestId;
     private BookingDto lastBooking;
     private BookingDto nextBooking;
     private List<CommentDto> comments;

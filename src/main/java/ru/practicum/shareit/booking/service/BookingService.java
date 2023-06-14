@@ -1,5 +1,6 @@
 package ru.practicum.shareit.booking.service;
 
+import org.springframework.web.bind.annotation.RequestParam;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.model.Booking;
 
@@ -13,7 +14,7 @@ public interface BookingService {
 
     Booking getBooking(long bookingId, long userId);
 
-    List<Booking> getAllBookingsByUser(long userId, String bookingStatus);
+    List<Booking> getAllBookingsByUser(long userId, String bookingStatus, Integer from, Integer size);
 
-    List<Booking> getAllBookingsForUserItems(long userId, String bookingStatus);
+    List<Booking> getAllBookingsForUserItems(long userId, String bookingStatus, Integer from, Integer size);
 }

@@ -11,9 +11,9 @@ import java.util.List;
 @Service
 public interface ItemService {
 
-    Item postItemDto(Item item, long userId);
+    Item postItem(Item item, long userId);
 
-    Item patchItemDto(long itemId, Item item, long userId);
+    Item patchItem(long itemId, Item item, long userId);
 
     ItemDto getItemDtoById(long itemId, long userId);
 
