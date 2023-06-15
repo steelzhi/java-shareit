@@ -10,6 +10,9 @@ import java.util.List;
 @Component
 public class CommentMapper {
 
+    private CommentMapper() {
+    }
+
     public static CommentDto mapToCommentDto(Comment comment) {
         return new CommentDto(
                 comment.getId(),

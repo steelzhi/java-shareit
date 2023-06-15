@@ -11,6 +11,9 @@ import java.util.List;
 @Component
 public class ItemMapper {
 
+    private ItemMapper() {
+    }
+
     public static ItemDto mapToItemDto(
             Item item, BookingDto lastBookingDto, BookingDto nextBookingDto, List<Comment> comments) {
         return new ItemDto(

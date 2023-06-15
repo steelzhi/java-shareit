@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.EmptyDescriptionException;
-import ru.practicum.shareit.exception.IncorrectPaginationException;
 import ru.practicum.shareit.exception.RequestDoesNotExistException;
 import ru.practicum.shareit.exception.UserDoesNotExistException;
 import ru.practicum.shareit.item.model.Item;
@@ -29,6 +29,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     private final UserRepository userRepository;
     private final ItemRepository itemRepository;
 
+    @Transactional
     @Override
     public ItemRequest postItemRequest(long userId, ItemRequest itemRequest) {
         checkIfDescriptionIsBlank(itemRequest);
@@ -38,6 +39,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         return itemRequestRepository.save(itemRequest);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<ItemRequestDto> getAllRequestsMadeByRequester(long userId) {
         checkAndGetUserIfExists(userId);
@@ -63,6 +65,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         return itemRequestDtos;
     }
 
+    @Transactional(readOnly = true)
     @Override
     public ItemRequestDto getRequestDto(long userId, long requestId) {
         checkAndGetUserIfExists(userId);

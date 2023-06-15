@@ -9,6 +9,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class BookingMapper {
+    private BookingMapper() {
+    }
+
     public static Booking mapToBooking(BookingDto bookingDto, Item itemDto, User booker) {
         return new Booking(bookingDto.getId(),
                 bookingDto.getStart(),

@@ -9,6 +9,9 @@ import java.util.List;
 
 public class ItemRequestMapper {
 
+    private ItemRequestMapper() {
+    }
+
     public static ItemRequestDto mapToItemRequestDto(ItemRequest itemRequest, List<Item> items) {
         return new ItemRequestDto(
                 itemRequest.getId(),
