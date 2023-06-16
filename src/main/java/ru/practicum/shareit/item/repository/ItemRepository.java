@@ -14,7 +14,6 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     Page<Item> findAllByOwner_Id(long ownerId, Pageable page);
 
-
     @Query("SELECT i " +
             "FROM Item AS i " +
             "WHERE UPPER(i.name) LIKE UPPER(CONCAT('%', ?1, '%')) " +

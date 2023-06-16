@@ -10,7 +10,6 @@ import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.booking.status.BookingStatus;
-import ru.practicum.shareit.exception.IllegalAccessException;
 import ru.practicum.shareit.exception.*;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
@@ -48,7 +47,6 @@ public class ItemServiceImpl implements ItemService {
     @Transactional
     public Item patchItem(long itemId, Item item, long userId) {
         checkIfUserAndItemExists(userId, itemId);
-        checkIfUserHasRightToPatchOrGetBookings(itemId, userId);
         item.setId(itemId);
         Item existingItemDto = getItem(itemId);
         if (item.getName() == null) {
@@ -162,7 +160,7 @@ public class ItemServiceImpl implements ItemService {
     @Transactional(readOnly = true)
     private List<Item> getAllItemsByOwner(long userId) {
         checkAndGetUserIfExists(userId);
-        return itemRepository.findAllByOwner_Id(userId);
+            return itemRepository.findAllByOwner_Id(userId);
     }
 
     private Item getItem(long itemId) {
@@ -238,14 +236,6 @@ public class ItemServiceImpl implements ItemService {
             }
         }
 
-        throw new ItemDoesNotExistException("Вещи с указанным id не существует.");
-    }
-
-    private void checkIfUserHasRightToPatchOrGetBookings(long itemId, long userId) {
-        Item item = itemRepository.getReferenceById(itemId);
-        if (item.getOwner().getId() != userId) {
-            throw new IllegalAccessException("Пользователь с id = " + userId + " не является собственником " +
-                    "вещи с id = " + item.getId() + " и не имеет прав ее изменение");
-        }
+        throw new ItemDoesNotExistException("У пользователя нет вещи с указанным id.");
     }
 }
