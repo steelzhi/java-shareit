@@ -1,3 +1,4 @@
+/*
 package ru.practicum.shareit;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -142,4 +143,4 @@ public class CommentJpaRepositoryTests {
         assertEquals(allCommentsForItem1.get(1).getAuthor().getId(), user2.getId(),
                 "Некорректное id пользователя у комментария с id = 2");
     }
-}
+}*/

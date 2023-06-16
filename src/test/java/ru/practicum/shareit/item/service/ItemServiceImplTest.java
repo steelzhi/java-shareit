@@ -16,6 +16,8 @@ import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.booking.status.BookingStatus;
 import ru.practicum.shareit.exception.IncorrectPaginationException;
 import ru.practicum.shareit.exception.ItemDoesNotExistException;
+import ru.practicum.shareit.exception.UserDoesNotExistException;
+import ru.practicum.shareit.exception.UserDoesNotExistOrDoesNotHaveAnyItemsException;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
@@ -87,7 +89,7 @@ class ItemServiceImplTest {
             .build();
 
 
-   /* @Test
+    @Test
     void postItemWithExistingUserId() {
         Mockito.when(userRepository.findById(1L))
                 .thenReturn(Optional.of(user1));
@@ -298,23 +300,36 @@ class ItemServiceImplTest {
 
         Mockito.verify(userRepository, Mockito.times(1)).findById(2L);
         Mockito.verify(itemRepository, Mockito.never()).findAllByOwner_Id(2L, getPage(-1, 100));
-    }*/
+    }
 
-     @Test
+    @Test
     void searchItems() {
-         Mockito.when(itemService.searchItems("шлифо", null, null))
-                 .thenReturn(List.of(item1));
+        Mockito.when(itemService.searchItems("шлифо", null, null))
+                .thenReturn(List.of(item1));
 
-         List<Item> foundItems = itemService.searchItems("шлифо", null, null);
-         assertThat(foundItems, equalTo(List.of(item1)));
-         Mockito.verify(itemRepository, Mockito.times(1)).searchItems("шлифо", getPage(null, null));
+        List<Item> foundItems = itemService.searchItems("шлифо", null, null);
+        assertThat(foundItems, equalTo(List.of(item1)));
+        Mockito.verify(itemRepository, Mockito.times(1)).searchItems("шлифо");
+    }
+
+    @Test
+    void searchItemsWithNoItemMatch() {
+        Mockito.when(itemService.searchItems("автомобиль", null, null))
+                .thenReturn(new ArrayList<>());
+
+        List<Item> foundItems = itemService.searchItems("автомобиль", null, null);
+        assertThat(foundItems, equalTo(new ArrayList<>()));
+        Mockito.verify(itemRepository, Mockito.times(1)).searchItems("автомобиль");
     }
 
     /*@Test
     void postComment() {
     }*/
 
-        PageRequest getPage(int from, int size) {
-        return PageRequest.of(from > 0 ? from / size : 0, size, Sort.by("id").descending());
+    PageRequest getPage(Integer from, Integer size) {
+        if (from != null && size != null) {
+            return PageRequest.of(from > 0 ? from / size : 0, size, Sort.by("id").descending());
+        }
+        return null;
     }
 }

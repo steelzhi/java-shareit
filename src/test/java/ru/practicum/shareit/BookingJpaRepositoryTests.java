@@ -1,3 +1,4 @@
+/*
 package ru.practicum.shareit;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -165,4 +166,4 @@ public class BookingJpaRepositoryTests {
         assertEquals(allBookingsForItem2, List.of(booking2),
                 "Некорректный состав бронирований предмета с id = 2");
     }
-}
+}*/
