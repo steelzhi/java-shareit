@@ -14,8 +14,6 @@ import ru.practicum.shareit.exception.IllegalAccessException;
 import ru.practicum.shareit.exception.*;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
-import ru.practicum.shareit.request.dto.ItemRequestDto;
-import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.user.repository.UserRepository;
 import ru.practicum.shareit.util.Pagination;
 
@@ -29,7 +27,7 @@ public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
-    private final ItemRepository itemDtoRepository;
+    private final ItemRepository itemRepository;
     private final long delay = 500_000_000;
 
     @Override
@@ -38,7 +36,7 @@ public class BookingServiceImpl implements BookingService {
         checkIfTheItemIsAvailableAntOtherParamsAreCorrect(bookingDto, userId);
         bookingDto.setStatus(BookingStatus.WAITING);
         Long itemDtoId = bookingDto.getItemId();
-        Booking booking = BookingMapper.mapToBooking(bookingDto, itemDtoRepository.getReferenceById(itemDtoId),
+        Booking booking = BookingMapper.mapToBooking(bookingDto, itemRepository.getReferenceById(itemDtoId),
                 userRepository.getReferenceById(userId));
         return bookingRepository.save(booking);
     }
@@ -156,8 +154,8 @@ public class BookingServiceImpl implements BookingService {
     private Booking getBookingIfUserHasAccessRights(long bookingId, long userId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new BookingDoesNotExistException("Бронирования с id = " + bookingId + "не найдено."));
-        Item itemDto = itemDtoRepository.getReferenceById(booking.getItem().getId());
-        if (booking.getBooker().getId() != userId && itemDto.getOwner().getId() != userId) {
+        Item item = booking.getItem();
+        if (booking.getBooker().getId() != userId && item.getOwner().getId() != userId) {
             throw new IllegalAccessException(
                     "Пользователь с id = " + userId + " не имеет права доступа к информации о вещи с id = " + booking);
         }
@@ -168,8 +166,8 @@ public class BookingServiceImpl implements BookingService {
     private Booking getBookingIfUserHasPatchingRights(long bookingId, long userId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new BookingDoesNotExistException("Бронирования с id = " + bookingId + "не найдено."));
-        Item itemDto = itemDtoRepository.getReferenceById(booking.getItem().getId());
-        if (itemDto.getOwner().getId() != userId) {
+        Item item = booking.getItem();
+        if (item.getOwner().getId() != userId) {
             throw new IllegalAccessException(
                     "Пользователь с id = " + userId + " не имеет права доступа к информации о бронировании с id = "
                             + booking);
@@ -192,7 +190,7 @@ public class BookingServiceImpl implements BookingService {
     private void checkIfTheItemIsAvailableAntOtherParamsAreCorrect(BookingDto bookingDto, long userId) {
         checkIfUserExists(userId);
 
-        Item itemDto = itemDtoRepository.findById(bookingDto.getItemId())
+        Item itemDto = itemRepository.findById(bookingDto.getItemId())
                 .orElseThrow(() -> new ItemDoesNotExistException("Вещи с таким id не существует"));
 
         if (bookingDto.getEnd() == null

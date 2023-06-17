@@ -12,11 +12,11 @@ public class BookingMapper {
     private BookingMapper() {
     }
 
-    public static Booking mapToBooking(BookingDto bookingDto, Item itemDto, User booker) {
+    public static Booking mapToBooking(BookingDto bookingDto, Item item, User booker) {
         return new Booking(bookingDto.getId(),
                 bookingDto.getStart(),
                 bookingDto.getEnd(),
-                itemDto,
+                item,
                 booker,
                 bookingDto.getStatus()
         );

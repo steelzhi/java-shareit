@@ -36,6 +36,7 @@ class CommentDtoTest {
                 .build();
 
         Item item = Item.builder()
+                .id(1L)
                 .name("item")
                 .description("item description")
                 .available(true)
@@ -54,6 +55,13 @@ class CommentDtoTest {
         JsonContent<CommentDto> result = json.write(commentDto);
 
         assertThat(result).extractingJsonPathStringValue("$.text").isEqualTo("this is a comment");
+        assertThat(result).extractingJsonPathNumberValue("$.item.id").isEqualTo(Math.toIntExact(item.getId()));
+        assertThat(result).extractingJsonPathStringValue("$.item.name").isEqualTo("item");
+        assertThat(result).extractingJsonPathStringValue("$.item.description").isEqualTo("item description");
+        assertThat(result).extractingJsonPathNumberValue("$.item.owner.id").isEqualTo(Math.toIntExact(user1.getId()));
+        assertThat(result).extractingJsonPathStringValue("$.item.owner.name").isEqualTo("user1");
+        assertThat(result).extractingJsonPathStringValue("$.item.owner.email").isEqualTo("user1@user.ru");
+        assertThat(result).extractingJsonPathBooleanValue("$.item.available").isEqualTo(true);
         assertThat(result).extractingJsonPathStringValue("$.authorName").isEqualTo("user2");
         assertThat(result).extractingJsonPathStringValue("$.created")
                 .isEqualTo(now.format(DateTimeFormatter.ofPattern("YYYY-MM-dd'T'HH:mm:ss")));
