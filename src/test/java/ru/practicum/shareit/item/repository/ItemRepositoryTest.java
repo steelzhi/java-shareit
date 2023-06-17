@@ -51,7 +51,7 @@ public class ItemRepositoryTest {
     void searchListOfAvailableItems() {
         TypedQuery<Item> query = em.getEntityManager()
                 .createQuery("SELECT i FROM Item AS i WHERE UPPER(i.name) LIKE UPPER(CONCAT('%', :text, '%')) " +
-                        "OR UPPER(i.description) LIKE UPPER(CONCAT('%', :text, '%')) AND i.available = true",
+                                "OR UPPER(i.description) LIKE UPPER(CONCAT('%', :text, '%')) AND i.available = true",
                         Item.class);
 
         Item item3 = itemRepository.getReferenceById(3L);

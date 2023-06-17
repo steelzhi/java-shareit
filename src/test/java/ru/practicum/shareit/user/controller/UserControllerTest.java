@@ -100,10 +100,10 @@ class UserControllerTest {
                 .thenReturn(user1);
 
         mockMvc.perform(post("/users")
-                .content(objectMapper.writeValueAsBytes(user1))
-                .characterEncoding(StandardCharsets.UTF_8)
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON))
+                        .content(objectMapper.writeValueAsBytes(user1))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name", is(user1.getName())))
                 .andExpect(jsonPath("$.email", is(user1.getEmail())));
@@ -125,10 +125,10 @@ class UserControllerTest {
                 .thenReturn(patchedUser2);
 
         mockMvc.perform(patch("/users/2")
-                .content(objectMapper.writeValueAsBytes(patchedUser2))
-                .characterEncoding(StandardCharsets.UTF_8)
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON))
+                        .content(objectMapper.writeValueAsBytes(patchedUser2))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name", is(patchedUser2.getName())))
                 .andExpect(jsonPath("$.email", is(patchedUser2.getEmail())));

@@ -188,7 +188,8 @@ class BookingControllerTest {
                 .andExpect(jsonPath("$[0].item.name", is(booking1.getItem().getName())))
                 .andExpect(jsonPath("$[0].item.description", is(booking1.getItem().getDescription())))
                 .andExpect(jsonPath("$[0].item.available", is(booking1.getItem().getAvailable())))
-                .andExpect(jsonPath("$[0].item.owner.id", is(booking1.getItem().getOwner().getId()), Long.class))
+                .andExpect(jsonPath("$[0].item.owner.id",
+                        is(booking1.getItem().getOwner().getId()), Long.class))
                 .andExpect(jsonPath("$[0].item.owner.name", is(booking1.getItem().getOwner().getName())))
                 .andExpect(jsonPath("$[0].item.owner.email", is(booking1.getItem().getOwner().getEmail())))
                 .andExpect(jsonPath("$[0].start", is(now.plusHours(1L).toString())))
@@ -199,14 +200,16 @@ class BookingControllerTest {
                 .andExpect(jsonPath("$[1].item.name", is(booking2.getItem().getName())))
                 .andExpect(jsonPath("$[1].item.description", is(booking2.getItem().getDescription())))
                 .andExpect(jsonPath("$[1].item.available", is(booking2.getItem().getAvailable())))
-                .andExpect(jsonPath("$[1].item.owner.id", is(booking2.getItem().getOwner().getId()), Long.class))
+                .andExpect(jsonPath("$[1].item.owner.id",
+                        is(booking2.getItem().getOwner().getId()), Long.class))
                 .andExpect(jsonPath("$[1].item.owner.name", is(booking2.getItem().getOwner().getName())))
                 .andExpect(jsonPath("$[1].item.owner.email", is(booking2.getItem().getOwner().getEmail())))
                 .andExpect(jsonPath("$[1].start", is(now.plusDays(2L).toString())))
                 .andExpect(jsonPath("$[1].end", is(now.plusDays(3L).toString())))
                 .andExpect(jsonPath("$[1].status", is(booking2.getStatus().name())));
 
-        Mockito.verify(bookingService, Mockito.times(1)).getAllBookingsByUser(2L, "WAITING", null, null);
+        Mockito.verify(bookingService, Mockito.times(1))
+                .getAllBookingsByUser(2L, "WAITING", null, null);
     }
 
     @SneakyThrows
@@ -226,7 +229,8 @@ class BookingControllerTest {
                 .andExpect(jsonPath("$[0].item.name", is(booking1.getItem().getName())))
                 .andExpect(jsonPath("$[0].item.description", is(booking1.getItem().getDescription())))
                 .andExpect(jsonPath("$[0].item.available", is(booking1.getItem().getAvailable())))
-                .andExpect(jsonPath("$[0].item.owner.id", is(booking1.getItem().getOwner().getId()), Long.class))
+                .andExpect(jsonPath("$[0].item.owner.id",
+                        is(booking1.getItem().getOwner().getId()), Long.class))
                 .andExpect(jsonPath("$[0].item.owner.name", is(booking1.getItem().getOwner().getName())))
                 .andExpect(jsonPath("$[0].item.owner.email", is(booking1.getItem().getOwner().getEmail())))
                 .andExpect(jsonPath("$[0].start", is(now.plusHours(1L).toString())))
@@ -237,7 +241,8 @@ class BookingControllerTest {
                 .andExpect(jsonPath("$[1].item.name", is(booking2.getItem().getName())))
                 .andExpect(jsonPath("$[1].item.description", is(booking2.getItem().getDescription())))
                 .andExpect(jsonPath("$[1].item.available", is(booking2.getItem().getAvailable())))
-                .andExpect(jsonPath("$[1].item.owner.id", is(booking2.getItem().getOwner().getId()), Long.class))
+                .andExpect(jsonPath("$[1].item.owner.id",
+                        is(booking2.getItem().getOwner().getId()), Long.class))
                 .andExpect(jsonPath("$[1].item.owner.name", is(booking2.getItem().getOwner().getName())))
                 .andExpect(jsonPath("$[1].item.owner.email", is(booking2.getItem().getOwner().getEmail())))
                 .andExpect(jsonPath("$[1].start", is(now.plusDays(2L).toString())))

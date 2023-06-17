@@ -9,16 +9,18 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import ru.practicum.shareit.booking.model.Booking;
-import ru.practicum.shareit.booking.status.BookingStatus;
 import ru.practicum.shareit.exception.ItemDoesNotExistException;
+import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.mapper.CommentMapper;
+import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.service.ItemService;
 import ru.practicum.shareit.user.model.User;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
@@ -91,6 +93,18 @@ class ItemControllerTest {
             .requestId(item3.getRequestId())
             .build();
 
+    LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+
+    Comment comment = Comment.builder()
+            .id(1L)
+            .text("this is a comment")
+            .item(item1)
+            .author(user2)
+            .created(now)
+            .build();
+
+    CommentDto commentDto = CommentMapper.mapToCommentDto(comment);
+
     @SneakyThrows
     @Test
     void postItem() {
@@ -143,6 +157,8 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$.owner.id", is(patchedItem.getOwner().getId()), Long.class))
                 .andExpect(jsonPath("$.owner.name", is(patchedItem.getOwner().getName())))
                 .andExpect(jsonPath("$.owner.email", is(patchedItem.getOwner().getEmail())));
+
+        Mockito.verify(itemService, Mockito.times(1)).patchItem(2L, patchedItem, 2L);
     }
 
     @SneakyThrows
@@ -208,7 +224,8 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$[1].owner.name", is(itemDto1.getOwner().getName())))
                 .andExpect(jsonPath("$[1].owner.email", is(itemDto1.getOwner().getEmail())));
 
-        Mockito.verify(itemService, Mockito.times(1)).getAllItemsDtoByUser(userId, 1, 5);
+        Mockito.verify(itemService, Mockito.times(1))
+                .getAllItemsDtoByUser(userId, 1, 5);
     }
 
     @SneakyThrows
@@ -231,11 +248,34 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$[0].owner.name", is(item2.getOwner().getName())))
                 .andExpect(jsonPath("$[0].owner.email", is(item2.getOwner().getEmail())));
 
-        Mockito.verify(itemService, Mockito.times(1)).searchItems("нист", null, null);
+        Mockito.verify(itemService, Mockito.times(1))
+                .searchItems("нист", null, null);
     }
 
-/*@SneakyThrows
+    @SneakyThrows
     @Test
     void postComment() {
-    }*/
+        Mockito.when(itemService.postComment(1L, comment, 2L))
+                .thenReturn(commentDto);
+
+        mockMvc.perform(post("/items/{itemId}/comment", 1L)
+                        .header("X-Sharer-User-Id", 2L)
+                        .content(objectMapper.writeValueAsBytes(comment))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(comment.getId()), Long.class))
+                .andExpect(jsonPath("$.text", is(comment.getText())))
+                .andExpect(jsonPath("$.item.id", is(comment.getItem().getId()), Long.class))
+                .andExpect(jsonPath("$.item.name", is(comment.getItem().getName())))
+                .andExpect(jsonPath("$.item.description", is(comment.getItem().getDescription())))
+                .andExpect(jsonPath("$.item.available", is(comment.getItem().getAvailable())))
+                .andExpect(jsonPath("$.item.owner.id", is(comment.getItem().getOwner().getId()), Long.class))
+                .andExpect(jsonPath("$.item.owner.name", is(comment.getItem().getOwner().getName())))
+                .andExpect(jsonPath("$.item.owner.email", is(comment.getItem().getOwner().getEmail())))
+                .andExpect(jsonPath("$.authorName", is(comment.getAuthor().getName())));
+
+        Mockito.verify(itemService, Mockito.times(1)).postComment(1L, comment, 2L);
+    }
 }

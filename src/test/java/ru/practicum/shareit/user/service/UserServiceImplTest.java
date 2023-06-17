@@ -1,9 +1,7 @@
 package ru.practicum.shareit.user.service;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.practicum.shareit.exception.UserDoesNotExistException;
@@ -14,15 +12,16 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
 
     UserRepository userRepository = Mockito.mock(UserRepository.class);
 
-    UserService userService= new UserServiceImpl(userRepository);
+    UserService userService = new UserServiceImpl(userRepository);
 
     User user1 = User.builder()
             .id(1L)

@@ -2,7 +2,6 @@ package ru.practicum.shareit.booking.service;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
@@ -14,8 +13,9 @@ import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.booking.status.BookingStatus;
-import ru.practicum.shareit.exception.*;
 import ru.practicum.shareit.exception.IllegalAccessException;
+import ru.practicum.shareit.exception.IncorrectDateException;
+import ru.practicum.shareit.exception.ItemNotAvailableException;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
@@ -27,9 +27,9 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(MockitoExtension.class)
 class BookingServiceImplTest {
@@ -97,11 +97,11 @@ class BookingServiceImplTest {
         Mockito.when(userRepository.findById(2L))
                 .thenReturn(Optional.of(user2));
         Mockito.when(itemRepository.findById(1L))
-                        .thenReturn(Optional.of(item1));
+                .thenReturn(Optional.of(item1));
         Mockito.when(itemRepository.getReferenceById(1L))
-                        .thenReturn(item1);
+                .thenReturn(item1);
         Mockito.when(userRepository.getReferenceById(2L))
-                        .thenReturn(user2);
+                .thenReturn(user2);
         Mockito.when(bookingService.createBooking(bookingDto, 2L))
                 .thenReturn(booking1);
 
@@ -137,7 +137,8 @@ class BookingServiceImplTest {
                 () -> bookingService.createBooking(bookingDto, 1L));
         assertEquals(itemNotAvailableException.getMessage(), "Данная вещь в настоящий момент занята");
 
-        Mockito.verify(userRepository, Mockito.times(1)).findById(1L);;
+        Mockito.verify(userRepository, Mockito.times(1)).findById(1L);
+        ;
         Mockito.verify(userRepository, Mockito.never()).findById(2L);
         Mockito.verify(userRepository, Mockito.never()).getReferenceById(1L);
         Mockito.verify(itemRepository, Mockito.times(1)).findById(3L);
@@ -178,11 +179,11 @@ class BookingServiceImplTest {
                 .build();
 
         Mockito.when(bookingRepository.findById(booking1.getId()))
-                        .thenReturn(Optional.of(booking1));
+                .thenReturn(Optional.of(booking1));
         Mockito.when(itemRepository.getReferenceById(booking1.getItem().getId()))
-                        .thenReturn(booking1.getItem());
+                .thenReturn(booking1.getItem());
         Mockito.when(bookingService.patchBookingWithUpdatedStatus(
-        booking1.getId(), booking1.getItem().getOwner().getId(), true))
+                        booking1.getId(), booking1.getItem().getOwner().getId(), true))
 
                 .thenReturn(booking1);
 

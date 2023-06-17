@@ -59,11 +59,16 @@ class ItemRequestDtoTest {
     void testItemDto() {
         JsonContent<ItemRequestDto> result = json.write(itemRequestDto);
 
-        assertThat(result).extractingJsonPathNumberValue("$.id").isEqualTo(Math.toIntExact(itemRequest.getId()));
-        assertThat(result).extractingJsonPathNumberValue("$.requester.id").isEqualTo(Math.toIntExact(itemRequest.getRequester().getId()));
-        assertThat(result).extractingJsonPathStringValue("$.requester.name").isEqualTo(itemRequest.getRequester().getName());
-        assertThat(result).extractingJsonPathStringValue("$.requester.email").isEqualTo(itemRequest.getRequester().getEmail());
-        assertThat(result).extractingJsonPathStringValue("$.description").isEqualTo(itemRequest.getDescription());
+        assertThat(result).extractingJsonPathNumberValue("$.id")
+                .isEqualTo(Math.toIntExact(itemRequest.getId()));
+        assertThat(result).extractingJsonPathNumberValue("$.requester.id")
+                .isEqualTo(Math.toIntExact(itemRequest.getRequester().getId()));
+        assertThat(result).extractingJsonPathStringValue("$.requester.name")
+                .isEqualTo(itemRequest.getRequester().getName());
+        assertThat(result).extractingJsonPathStringValue("$.requester.email")
+                .isEqualTo(itemRequest.getRequester().getEmail());
+        assertThat(result).extractingJsonPathStringValue("$.description")
+                .isEqualTo(itemRequest.getDescription());
         assertThat(result).extractingJsonPathStringValue("$.created")
                 .isEqualTo(now.format(DateTimeFormatter.ofPattern("YYYY-MM-dd'T'HH:mm:ss")));
     }

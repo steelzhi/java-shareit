@@ -103,7 +103,7 @@ class ItemServiceImplTest {
                 .thenReturn(Optional.of(user1));
 
         Mockito.when(itemService.postItem(item1, 1L))
-                        .thenReturn(item1);
+                .thenReturn(item1);
 
         Item postedItem1 = itemService.postItem(item1, 1L);
         assertEquals(item1, postedItem1, "Выгруженная из БД вещь не совпадает с первоначальной");
@@ -212,7 +212,7 @@ class ItemServiceImplTest {
     @Test
     void getItemDtoByCorrectId() {
         Mockito.when(itemRepository.findById(1L))
-                        .thenReturn(Optional.of(item1));
+                .thenReturn(Optional.of(item1));
         Mockito.when(itemRepository.getReferenceById(1L))
                 .thenReturn(item1);
         Mockito.when(bookingRepository.getAllBookingsByOwner_IdAndItem_Id(1L, 1L))
@@ -232,7 +232,7 @@ class ItemServiceImplTest {
     @Test
     void getItemDtoByNotExistingId() {
         Mockito.when(itemRepository.findById(100L))
-                        .thenThrow(new ItemDoesNotExistException("Вещи с таким id не существует"));
+                .thenThrow(new ItemDoesNotExistException("Вещи с таким id не существует"));
 
         ItemDoesNotExistException itemDoesNotExistException = assertThrows(ItemDoesNotExistException.class,
                 () -> itemService.getItemDtoById(100L, 1L));
@@ -242,51 +242,53 @@ class ItemServiceImplTest {
         Mockito.verify(itemRepository, Mockito.times(1)).findById(100L);
     }
 
-   @Test
+    @Test
     void getAllItemsDtoByUser() {
-       Item item3 = Item.builder()
-               .id(3L)
-               .name("Трос")
-               .description("Для буксировки")
-               .available(true)
-               .owner(user2)
-               .build();
+        Item item3 = Item.builder()
+                .id(3L)
+                .name("Трос")
+                .description("Для буксировки")
+                .available(true)
+                .owner(user2)
+                .build();
 
-       Mockito.when(userRepository.findById(2L))
-               .thenReturn(Optional.of(user2));
-       Mockito.when(itemRepository.findById(2L))
-               .thenReturn(Optional.of(item2));
-       Mockito.when(itemRepository.getReferenceById(2L))
-               .thenReturn(item2);
-       Mockito.when(bookingRepository.getAllBookingsByOwner_IdAndItem_Id(2L, 2L))
-               .thenReturn(new ArrayList<>());
-       Mockito.when(commentRepository.findAllByItem_Id(2L))
-               .thenReturn(new ArrayList<>());
-       ItemDto itemDto2 = ItemMapper.mapToItemDto(item2, null, null, new ArrayList<>());
+        Mockito.when(userRepository.findById(2L))
+                .thenReturn(Optional.of(user2));
+        Mockito.when(itemRepository.findById(2L))
+                .thenReturn(Optional.of(item2));
+        Mockito.when(itemRepository.getReferenceById(2L))
+                .thenReturn(item2);
+        Mockito.when(bookingRepository.getAllBookingsByOwner_IdAndItem_Id(2L, 2L))
+                .thenReturn(new ArrayList<>());
+        Mockito.when(commentRepository.findAllByItem_Id(2L))
+                .thenReturn(new ArrayList<>());
+        ItemDto itemDto2 = ItemMapper.mapToItemDto(item2, null, null, new ArrayList<>());
 
-       Mockito.when(itemRepository.findById(3L))
-               .thenReturn(Optional.of(item3));
-       Mockito.when(itemRepository.getReferenceById(3L))
-               .thenReturn(item3);
-       Mockito.when(bookingRepository.getAllBookingsByOwner_IdAndItem_Id(2L, 3L))
-               .thenReturn(new ArrayList<>());
-       Mockito.when(commentRepository.findAllByItem_Id(3L))
-               .thenReturn(new ArrayList<>());
-       ItemDto itemDto3 = ItemMapper.mapToItemDto(item3, null, null, new ArrayList<>());
+        Mockito.when(itemRepository.findById(3L))
+                .thenReturn(Optional.of(item3));
+        Mockito.when(itemRepository.getReferenceById(3L))
+                .thenReturn(item3);
+        Mockito.when(bookingRepository.getAllBookingsByOwner_IdAndItem_Id(2L, 3L))
+                .thenReturn(new ArrayList<>());
+        Mockito.when(commentRepository.findAllByItem_Id(3L))
+                .thenReturn(new ArrayList<>());
+        ItemDto itemDto3 = ItemMapper.mapToItemDto(item3, null, null, new ArrayList<>());
 
-       Page<Item> pagedList = new PageImpl(List.of(item2, item3));
-       Mockito.when(itemRepository.findAllByOwner_Id(2L, getPage(0, 100)))
-               .thenReturn(pagedList);
+        Page<Item> pagedList = new PageImpl(List.of(item2, item3));
+        Mockito.when(itemRepository.findAllByOwner_Id(2L, getPage(0, 100)))
+                .thenReturn(pagedList);
 
-       assertThat(List.of(itemDto2, itemDto3), equalTo(itemService.getAllItemsDtoByUser(2L, 0, 100)));
+        assertThat(List.of(itemDto2, itemDto3), equalTo(itemService.getAllItemsDtoByUser(2L, 0, 100)));
 
-       Mockito.verify(userRepository, Mockito.times(1)).findById(2L);
-       Mockito.verify(itemRepository, Mockito.never()).findById(2L);
-       Mockito.verify(itemRepository, Mockito.times(1)).getReferenceById(2L);
-       Mockito.verify(bookingRepository, Mockito.times(1)).getAllBookingsByOwner_IdAndItem_Id(2L, 2L);
-       Mockito.verify(commentRepository, Mockito.times(1)).findAllByItem_Id(2L);
-       Mockito.verify(itemRepository, Mockito.times(1)).findAllByOwner_Id(2L, getPage(0, 100));
-   }
+        Mockito.verify(userRepository, Mockito.times(1)).findById(2L);
+        Mockito.verify(itemRepository, Mockito.never()).findById(2L);
+        Mockito.verify(itemRepository, Mockito.times(1)).getReferenceById(2L);
+        Mockito.verify(bookingRepository, Mockito.times(1))
+                .getAllBookingsByOwner_IdAndItem_Id(2L, 2L);
+        Mockito.verify(commentRepository, Mockito.times(1)).findAllByItem_Id(2L);
+        Mockito.verify(itemRepository, Mockito.times(1))
+                .findAllByOwner_Id(2L, getPage(0, 100));
+    }
 
     @Test
     void getAllItemsDtoByUserWithIncorrectPaginationParams() {

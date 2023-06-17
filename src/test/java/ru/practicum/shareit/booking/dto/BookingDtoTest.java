@@ -54,9 +54,12 @@ class BookingDtoTest {
     void testBookingDto() {
         JsonContent<BookingDto> result = json1.write(bookingDto);
 
-        assertThat(result).extractingJsonPathNumberValue("$.itemId").isEqualTo(Math.toIntExact(booking.getItem().getId()));
-        assertThat(result).extractingJsonPathNumberValue("$.id").isEqualTo(Math.toIntExact(booking.getId()));
-        assertThat(result).extractingJsonPathNumberValue("$.bookerId").isEqualTo(Math.toIntExact(booking.getBooker().getId()));
+        assertThat(result).extractingJsonPathNumberValue("$.itemId")
+                .isEqualTo(Math.toIntExact(booking.getItem().getId()));
+        assertThat(result).extractingJsonPathNumberValue("$.id")
+                .isEqualTo(Math.toIntExact(booking.getId()));
+        assertThat(result).extractingJsonPathNumberValue("$.bookerId")
+                .isEqualTo(Math.toIntExact(booking.getBooker().getId()));
         assertThat(result).extractingJsonPathStringValue("$.start")
                 .isEqualTo(now.format(DateTimeFormatter.ofPattern("YYYY-MM-dd'T'HH:mm:ss")));
         assertThat(result).extractingJsonPathStringValue("$.end")
@@ -70,9 +73,12 @@ class BookingDtoTest {
         Booking mappedFromBookingDto = BookingMapper.mapToBooking(bookingDto, item1, user2);
 
         JsonContent<Booking> result = json2.write(mappedFromBookingDto);
-        assertThat(result).extractingJsonPathNumberValue("$.id").isEqualTo(Math.toIntExact(bookingDto.getId()));
-        assertThat(result).extractingJsonPathNumberValue("$.item.id").isEqualTo(Math.toIntExact(bookingDto.getItemId()));
-        assertThat(result).extractingJsonPathNumberValue("$.booker.id").isEqualTo(Math.toIntExact(bookingDto.getBookerId()));
+        assertThat(result).extractingJsonPathNumberValue("$.id")
+                .isEqualTo(Math.toIntExact(bookingDto.getId()));
+        assertThat(result).extractingJsonPathNumberValue("$.item.id")
+                .isEqualTo(Math.toIntExact(bookingDto.getItemId()));
+        assertThat(result).extractingJsonPathNumberValue("$.booker.id")
+                .isEqualTo(Math.toIntExact(bookingDto.getBookerId()));
         assertThat(result).extractingJsonPathStringValue("$.start")
                 .isEqualTo(now.format(DateTimeFormatter.ofPattern("YYYY-MM-dd'T'HH:mm:ss")));
         assertThat(result).extractingJsonPathStringValue("$.end")

@@ -55,10 +55,12 @@ class CommentDtoTest {
         JsonContent<CommentDto> result = json.write(commentDto);
 
         assertThat(result).extractingJsonPathStringValue("$.text").isEqualTo("this is a comment");
-        assertThat(result).extractingJsonPathNumberValue("$.item.id").isEqualTo(Math.toIntExact(item.getId()));
+        assertThat(result).extractingJsonPathNumberValue("$.item.id")
+                .isEqualTo(Math.toIntExact(item.getId()));
         assertThat(result).extractingJsonPathStringValue("$.item.name").isEqualTo("item");
         assertThat(result).extractingJsonPathStringValue("$.item.description").isEqualTo("item description");
-        assertThat(result).extractingJsonPathNumberValue("$.item.owner.id").isEqualTo(Math.toIntExact(user1.getId()));
+        assertThat(result).extractingJsonPathNumberValue("$.item.owner.id")
+                .isEqualTo(Math.toIntExact(user1.getId()));
         assertThat(result).extractingJsonPathStringValue("$.item.owner.name").isEqualTo("user1");
         assertThat(result).extractingJsonPathStringValue("$.item.owner.email").isEqualTo("user1@user.ru");
         assertThat(result).extractingJsonPathBooleanValue("$.item.available").isEqualTo(true);
