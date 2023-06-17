@@ -1,6 +1,7 @@
 package ru.practicum.shareit.request.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -52,12 +53,14 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     public List<ItemRequestDto> getPagedRequestsMadeByOtherUsers(long userId, Integer from, Integer size) {
         Pagination.checkIfPaginationParamsAreNotCorrect(from, size);
 
-        List<ItemRequest> itemRequests;
+        List<ItemRequest> itemRequests = new ArrayList<>();
         if (from != null && size != null) {
             PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size, Sort.by("created").ascending());
-            itemRequests = itemRequestRepository
-                    .findAllByRequester_IdNot(userId, page)
-                    .getContent();
+            Page<ItemRequest> pagedList = itemRequestRepository
+                    .findAllByRequester_IdNot(userId, page);
+            if (pagedList != null) {
+                itemRequests = pagedList.getContent();
+            }
         } else {
             itemRequests = itemRequestRepository.findAllByRequester_IdNot(userId);
         }

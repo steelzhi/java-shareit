@@ -1,6 +1,7 @@
 package ru.practicum.shareit.booking.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -69,12 +70,13 @@ public class BookingServiceImpl implements BookingService {
         checkIfUserExists(userId);
         Pagination.checkIfPaginationParamsAreNotCorrect(from, size);
 
-        List<Booking> userBookings;
-        if (from != null && size != null)  {
+        List<Booking> userBookings = new ArrayList<>();
+        if (from != null && size != null) {
             PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size, Sort.by("id").descending());
-            userBookings = bookingRepository
-                    .getAllBookingsByBooker_Id(userId, page)
-                    .getContent();
+            Page<Booking> pagedList = bookingRepository.getAllBookingsByBooker_Id(userId, page);
+            if (pagedList != null) {
+                userBookings = pagedList.getContent();
+            }
         } else {
             userBookings = bookingRepository.getAllBookingsByBooker_Id(userId);
         }
@@ -88,12 +90,13 @@ public class BookingServiceImpl implements BookingService {
         checkIfUserExists(userId);
         Pagination.checkIfPaginationParamsAreNotCorrect(from, size);
 
-        List<Booking> itemBookings;
-        if (from != null && size != null)  {
+        List<Booking> itemBookings = new ArrayList<>();
+        if (from != null && size != null) {
             PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size, Sort.by("id").descending());
-            itemBookings = bookingRepository
-                    .getAllBookingsForOwnerItems(userId, page)
-                    .getContent();
+            Page<Booking> pagedList = bookingRepository.getAllBookingsForOwnerItems(userId, page);
+            if (pagedList != null) {
+                itemBookings = pagedList.getContent();
+            }
         } else {
             itemBookings = bookingRepository.getAllBookingsForOwnerItems(userId);
         }

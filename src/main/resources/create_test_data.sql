@@ -10,7 +10,11 @@ INSERT INTO users (name, email) VALUES
 ('practicum', 'practicum@yandex.ru'); -- 6
 
 INSERT INTO item_requests (requester_id, description, created) VALUES
-(1, 'Хотел бы воспользоваться щёткой для обуви', '2023-06-14 17:11:48.718206');
+(1, 'Хотел бы воспользоваться щёткой для обуви', '2023-06-14 17:11:48.718206'),
+(4, 'Хотел бы воспользоваться УШМ', '2023-06-15 17:11:48.718206'),
+(4, 'Нужен суперклей', '2023-06-15 18:11:48.718206'),
+(5, 'Ищу дрель-шуруповерт', '2023-06-15 18:11:48.718206');
+
 
 INSERT INTO items (name, description, is_available, user_id, request_id) VALUES
 ('Аккумуляторная дрель', 'Аккумуляторная дрель + аккумулятор', true, 1, null), -- 1

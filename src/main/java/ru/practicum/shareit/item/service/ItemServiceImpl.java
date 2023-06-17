@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 import ru.practicum.shareit.util.Pagination;
@@ -81,12 +83,13 @@ public class ItemServiceImpl implements ItemService {
         checkAndGetUserIfExists(userId);
         Pagination.checkIfPaginationParamsAreNotCorrect(from, size);
 
-        List<Item> itemsList;
+        List<Item> itemsList = new ArrayList<>();
         if (from != null && size != null) {
             PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size, Sort.by("id").descending());
-            itemsList = itemRepository
-                    .findAllByOwner_Id(userId, page)
-                    .getContent();
+            Page<Item> pagedList = itemRepository.findAllByOwner_Id(userId, page);
+            if (pagedList != null) {
+                itemsList = pagedList.getContent();
+            }
         } else {
             itemsList = itemRepository.findAllByOwner_Id(userId);
         }
@@ -115,9 +118,10 @@ public class ItemServiceImpl implements ItemService {
         if (!text.isBlank()) {
             if (from != null && size != null) {
                 PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size, Sort.by("id").descending());
-                foundBySearch = itemRepository
-                        .searchItems(text, page)
-                        .getContent();
+                Page<Item> pagedList = itemRepository.searchItems(text, page);
+                if (pagedList != null) {
+                    foundBySearch = pagedList.getContent();
+                }
             } else {
                 foundBySearch = itemRepository.searchItems(text);
             }
@@ -160,7 +164,7 @@ public class ItemServiceImpl implements ItemService {
     @Transactional(readOnly = true)
     private List<Item> getAllItemsByOwner(long userId) {
         checkAndGetUserIfExists(userId);
-            return itemRepository.findAllByOwner_Id(userId);
+        return itemRepository.findAllByOwner_Id(userId);
     }
 
     private Item getItem(long itemId) {
