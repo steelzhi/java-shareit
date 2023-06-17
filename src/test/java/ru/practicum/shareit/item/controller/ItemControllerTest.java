@@ -51,8 +51,6 @@ class ItemControllerTest {
             .email("user2@user.ru")
             .build();
 
-    List<User> users = List.of(user1, user2);
-
     Item item1 = Item.builder()
             .id(1L)
             .name("УШМ")
@@ -77,8 +75,6 @@ class ItemControllerTest {
             .owner(user1)
             .build();
 
-    List<Item> items = List.of(item1, item2);
-
     ItemDto itemDto1 = ItemDto.builder()
             .id(item1.getId())
             .name(item1.getName())
@@ -93,15 +89,6 @@ class ItemControllerTest {
             .description(item3.getDescription())
             .owner(item3.getOwner())
             .requestId(item3.getRequestId())
-            .build();
-
-    Booking booking1 = Booking.builder()
-            .id(1L)
-            .item(item1)
-            .booker(user2)
-            .start(LocalDateTime.now())
-            .end(LocalDateTime.now().plusDays(1L))
-            .status(BookingStatus.WAITING)
             .build();
 
     @SneakyThrows
@@ -120,7 +107,10 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$.id", is(item1.getId()), Long.class))
                 .andExpect(jsonPath("$.name", is(item1.getName())))
                 .andExpect(jsonPath("$.description", is(item1.getDescription())))
-                .andExpect(jsonPath("$.available", is(item1.getAvailable())));
+                .andExpect(jsonPath("$.available", is(item1.getAvailable())))
+                .andExpect(jsonPath("$.owner.id", is(item1.getOwner().getId()), Long.class))
+                .andExpect(jsonPath("$.owner.name", is(item1.getOwner().getName())))
+                .andExpect(jsonPath("$.owner.email", is(item1.getOwner().getEmail())));
 
         Mockito.verify(itemService, Mockito.times(1)).postItem(item1, user1.getId());
     }
@@ -149,7 +139,10 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$.id", is(patchedItem.getId()), Long.class))
                 .andExpect(jsonPath("$.name", is(item2.getName())))
                 .andExpect(jsonPath("$.description", is(patchedItem.getDescription())))
-                .andExpect(jsonPath("$.available", is(patchedItem.getAvailable())));
+                .andExpect(jsonPath("$.available", is(patchedItem.getAvailable())))
+                .andExpect(jsonPath("$.owner.id", is(patchedItem.getOwner().getId()), Long.class))
+                .andExpect(jsonPath("$.owner.name", is(patchedItem.getOwner().getName())))
+                .andExpect(jsonPath("$.owner.email", is(patchedItem.getOwner().getEmail())));
     }
 
     @SneakyThrows
@@ -165,7 +158,10 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$.id", is(itemDto1.getId()), Long.class))
                 .andExpect(jsonPath("$.name", is(itemDto1.getName())))
                 .andExpect(jsonPath("$.description", is(itemDto1.getDescription())))
-                .andExpect(jsonPath("$.requestId", is(itemDto1.getRequestId())));
+                .andExpect(jsonPath("$.requestId", is(itemDto1.getRequestId())))
+                .andExpect(jsonPath("$.owner.id", is(itemDto1.getOwner().getId()), Long.class))
+                .andExpect(jsonPath("$.owner.name", is(itemDto1.getOwner().getName())))
+                .andExpect(jsonPath("$.owner.email", is(itemDto1.getOwner().getEmail())));
 
         Mockito.verify(itemService, Mockito.times(1)).getItemDtoById(1L, 1L);
     }
@@ -201,10 +197,16 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$[0].name", is(itemDto1.getName())))
                 .andExpect(jsonPath("$[0].description", is(itemDto1.getDescription())))
                 .andExpect(jsonPath("$[0].requestId", is(itemDto1.getRequestId())))
+                .andExpect(jsonPath("$[0].owner.id", is(itemDto1.getOwner().getId()), Long.class))
+                .andExpect(jsonPath("$[0].owner.name", is(itemDto1.getOwner().getName())))
+                .andExpect(jsonPath("$[0].owner.email", is(itemDto1.getOwner().getEmail())))
                 .andExpect(jsonPath("$[1].id", is(itemDto3.getId()), Long.class))
                 .andExpect(jsonPath("$[1].name", is(itemDto3.getName())))
                 .andExpect(jsonPath("$[1].description", is(itemDto3.getDescription())))
-                .andExpect(jsonPath("$[1].requestId", is(itemDto3.getRequestId())));
+                .andExpect(jsonPath("$[1].requestId", is(itemDto3.getRequestId())))
+                .andExpect(jsonPath("$[1].owner.id", is(itemDto1.getOwner().getId()), Long.class))
+                .andExpect(jsonPath("$[1].owner.name", is(itemDto1.getOwner().getName())))
+                .andExpect(jsonPath("$[1].owner.email", is(itemDto1.getOwner().getEmail())));
 
         Mockito.verify(itemService, Mockito.times(1)).getAllItemsDtoByUser(userId, 1, 5);
     }
@@ -224,7 +226,10 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$[0].id", is(item2.getId()), Long.class))
                 .andExpect(jsonPath("$[0].name", is(item2.getName())))
                 .andExpect(jsonPath("$[0].description", is(item2.getDescription())))
-                .andExpect(jsonPath("$[0].requestId", is(item2.getRequestId())));
+                .andExpect(jsonPath("$[0].requestId", is(item2.getRequestId())))
+                .andExpect(jsonPath("$[0].owner.id", is(item2.getOwner().getId()), Long.class))
+                .andExpect(jsonPath("$[0].owner.name", is(item2.getOwner().getName())))
+                .andExpect(jsonPath("$[0].owner.email", is(item2.getOwner().getEmail())));
 
         Mockito.verify(itemService, Mockito.times(1)).searchItems("нист", null, null);
     }

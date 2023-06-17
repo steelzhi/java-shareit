@@ -23,13 +23,9 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import static org.hamcrest.Matchers.is;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @WebMvcTest(controllers = BookingController.class)
 class BookingControllerTest {
@@ -55,8 +51,6 @@ class BookingControllerTest {
             .email("user2@user.ru")
             .build();
 
-    List<User> users = List.of(user1, user2);
-
     Item item1 = Item.builder()
             .id(1L)
             .name("УШМ")
@@ -65,25 +59,9 @@ class BookingControllerTest {
             .owner(user1)
             .build();
 
-    Item item2 = Item.builder()
-            .id(2L)
-            .name("Канистра")
-            .description("Для ГСМ, V = 20 л")
-            .available(true)
-            .owner(user2)
-            .build();
-
-    Item item3 = Item.builder()
-            .id(3L)
-            .name("Зарядное устройство")
-            .description("Для зарядки аккумуляторов")
-            .available(false)
-            .owner(user2)
-            .build();
-
     LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
 
-    Booking booking = Booking.builder()
+    Booking booking1 = Booking.builder()
             .id(1L)
             .item(item1)
             .booker(user2)
@@ -92,13 +70,22 @@ class BookingControllerTest {
             .status(BookingStatus.WAITING)
             .build();
 
-    BookingDto bookingDto = BookingMapper.mapToBookingDto(booking);
+    Booking booking2 = Booking.builder()
+            .id(2L)
+            .item(item1)
+            .booker(user2)
+            .start(now.plusDays(2L))
+            .end(now.plusDays(3L))
+            .status(BookingStatus.WAITING)
+            .build();
+
+    BookingDto bookingDto = BookingMapper.mapToBookingDto(booking1);
 
     @SneakyThrows
     @Test
     void createBooking() {
         Mockito.when(bookingService.createBooking(bookingDto, 1L))
-                .thenReturn(booking);
+                .thenReturn(booking1);
 
         mockMvc.perform(post("/bookings")
                         .header("X-Sharer-User-Id", 1L)
@@ -107,49 +94,154 @@ class BookingControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(booking.getId()), Long.class))
-                .andExpect(jsonPath("$.item.id", is(booking.getItem().getId()), Long.class))
-                .andExpect(jsonPath("$.item.name", is(booking.getItem().getName())))
-                .andExpect(jsonPath("$.item.description", is(booking.getItem().getDescription())))
-                .andExpect(jsonPath("$.item.available", is(booking.getItem().getAvailable())))
-                .andExpect(jsonPath("$.item.owner.id", is(booking.getItem().getOwner().getId()), Long.class))
-                .andExpect(jsonPath("$.item.owner.name", is(booking.getItem().getOwner().getName())))
-                .andExpect(jsonPath("$.item.owner.email", is(booking.getItem().getOwner().getEmail())))
+                .andExpect(jsonPath("$.id", is(booking1.getId()), Long.class))
+                .andExpect(jsonPath("$.item.id", is(booking1.getItem().getId()), Long.class))
+                .andExpect(jsonPath("$.item.name", is(booking1.getItem().getName())))
+                .andExpect(jsonPath("$.item.description", is(booking1.getItem().getDescription())))
+                .andExpect(jsonPath("$.item.available", is(booking1.getItem().getAvailable())))
+                .andExpect(jsonPath("$.item.owner.id", is(booking1.getItem().getOwner().getId()), Long.class))
+                .andExpect(jsonPath("$.item.owner.name", is(booking1.getItem().getOwner().getName())))
+                .andExpect(jsonPath("$.item.owner.email", is(booking1.getItem().getOwner().getEmail())))
                 .andExpect(jsonPath("$.start", is(now.plusHours(1L).toString())))
                 .andExpect(jsonPath("$.end", is(now.plusDays(1L).toString())))
-                .andExpect(jsonPath("$.status", is(booking.getStatus().name())));
+                .andExpect(jsonPath("$.status", is(booking1.getStatus().name())));
 
         Mockito.verify(bookingService, Mockito.times(1)).createBooking(bookingDto, 1L);
     }
 
-   @SneakyThrows
+    @SneakyThrows
     @Test
     void patchBookingWithUpdatedStatus() {
         Booking updatedBooking = Booking.builder()
-                        .id(booking.getId())
-                                .item(booking.getItem())
-                                        .booker(booking.getBooker())
-                                                .start(booking.getStart())
-                                                        .end(booking.getEnd())
-                                                                .status(BookingStatus.APPROVED)
-                                                                        .build();
+                .id(booking1.getId())
+                .item(booking1.getItem())
+                .booker(booking1.getBooker())
+                .start(booking1.getStart())
+                .end(booking1.getEnd())
+                .status(BookingStatus.APPROVED)
+                .build();
 
-       Mockito.when(bookingService.patchBookingWithUpdatedStatus(1L, 1L, true))
-               .thenReturn(booking);
+        Mockito.when(bookingService.patchBookingWithUpdatedStatus(1L, 1L, true))
+                .thenReturn(updatedBooking);
+
+        mockMvc.perform(patch("/bookings/{bookingId}", booking1.getId())
+                        .header("X-Sharer-User-Id", 1L)
+                        .param("approved", "true")
+                        .content(objectMapper.writeValueAsBytes(bookingDto))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(booking1.getId()), Long.class))
+                .andExpect(jsonPath("$.item.id", is(booking1.getItem().getId()), Long.class))
+                .andExpect(jsonPath("$.item.name", is(booking1.getItem().getName())))
+                .andExpect(jsonPath("$.item.description", is(booking1.getItem().getDescription())))
+                .andExpect(jsonPath("$.item.available", is(booking1.getItem().getAvailable())))
+                .andExpect(jsonPath("$.item.owner.id", is(booking1.getItem().getOwner().getId()), Long.class))
+                .andExpect(jsonPath("$.item.owner.name", is(booking1.getItem().getOwner().getName())))
+                .andExpect(jsonPath("$.item.owner.email", is(booking1.getItem().getOwner().getEmail())))
+                .andExpect(jsonPath("$.start", is(now.plusHours(1L).toString())))
+                .andExpect(jsonPath("$.end", is(now.plusDays(1L).toString())))
+                .andExpect(jsonPath("$.status", is(BookingStatus.APPROVED.name())));
+
+        Mockito.verify(bookingService, Mockito.times(1))
+                .patchBookingWithUpdatedStatus(1L, 1L, true);
+
     }
 
-    /* @SneakyThrows
+    @SneakyThrows
     @Test
     void getBooking() {
+        Mockito.when(bookingService.getBooking(1L, 2L))
+                .thenReturn(booking1);
+
+        mockMvc.perform(get("/bookings/1")
+                        .header("X-Sharer-User-Id", 2L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(booking1.getId()), Long.class))
+                .andExpect(jsonPath("$.item.id", is(booking1.getItem().getId()), Long.class))
+                .andExpect(jsonPath("$.item.name", is(booking1.getItem().getName())))
+                .andExpect(jsonPath("$.item.description", is(booking1.getItem().getDescription())))
+                .andExpect(jsonPath("$.item.available", is(booking1.getItem().getAvailable())))
+                .andExpect(jsonPath("$.item.owner.id", is(booking1.getItem().getOwner().getId()), Long.class))
+                .andExpect(jsonPath("$.item.owner.name", is(booking1.getItem().getOwner().getName())))
+                .andExpect(jsonPath("$.item.owner.email", is(booking1.getItem().getOwner().getEmail())))
+                .andExpect(jsonPath("$.start", is(now.plusHours(1L).toString())))
+                .andExpect(jsonPath("$.end", is(now.plusDays(1L).toString())))
+                .andExpect(jsonPath("$.status", is(booking1.getStatus().name())));
+
+        Mockito.verify(bookingService, Mockito.times(1)).getBooking(1L, 2L);
     }
 
     @SneakyThrows
     @Test
     void getAllBookingsByUser() {
+        Mockito.when(bookingService.getAllBookingsByUser(2L, "WAITING", null, null))
+                .thenReturn(List.of(booking1, booking2));
+
+        mockMvc.perform(get("/bookings")
+                        .header("X-Sharer-User-Id", 2L)
+                        .param("state", "WAITING"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id", is(booking1.getId()), Long.class))
+                .andExpect(jsonPath("$[0].item.id", is(booking1.getItem().getId()), Long.class))
+                .andExpect(jsonPath("$[0].item.name", is(booking1.getItem().getName())))
+                .andExpect(jsonPath("$[0].item.description", is(booking1.getItem().getDescription())))
+                .andExpect(jsonPath("$[0].item.available", is(booking1.getItem().getAvailable())))
+                .andExpect(jsonPath("$[0].item.owner.id", is(booking1.getItem().getOwner().getId()), Long.class))
+                .andExpect(jsonPath("$[0].item.owner.name", is(booking1.getItem().getOwner().getName())))
+                .andExpect(jsonPath("$[0].item.owner.email", is(booking1.getItem().getOwner().getEmail())))
+                .andExpect(jsonPath("$[0].start", is(now.plusHours(1L).toString())))
+                .andExpect(jsonPath("$[0].end", is(now.plusDays(1L).toString())))
+                .andExpect(jsonPath("$[0].status", is(booking1.getStatus().name())))
+                .andExpect(jsonPath("$[1].id", is(booking2.getId()), Long.class))
+                .andExpect(jsonPath("$[1].item.id", is(booking2.getItem().getId()), Long.class))
+                .andExpect(jsonPath("$[1].item.name", is(booking2.getItem().getName())))
+                .andExpect(jsonPath("$[1].item.description", is(booking2.getItem().getDescription())))
+                .andExpect(jsonPath("$[1].item.available", is(booking2.getItem().getAvailable())))
+                .andExpect(jsonPath("$[1].item.owner.id", is(booking2.getItem().getOwner().getId()), Long.class))
+                .andExpect(jsonPath("$[1].item.owner.name", is(booking2.getItem().getOwner().getName())))
+                .andExpect(jsonPath("$[1].item.owner.email", is(booking2.getItem().getOwner().getEmail())))
+                .andExpect(jsonPath("$[1].start", is(now.plusDays(2L).toString())))
+                .andExpect(jsonPath("$[1].end", is(now.plusDays(3L).toString())))
+                .andExpect(jsonPath("$[1].status", is(booking2.getStatus().name())));
+
+        Mockito.verify(bookingService, Mockito.times(1)).getAllBookingsByUser(2L, "WAITING", null, null);
     }
 
     @SneakyThrows
     @Test
     void getAllBookingsForUserItems() {
-    }*/
+        Mockito.when(bookingService.getAllBookingsForUserItems(1L, "WAITING", 0, 5))
+                .thenReturn(List.of(booking1, booking2));
+
+        mockMvc.perform(get("/bookings/owner")
+                        .header("X-Sharer-User-Id", 1L)
+                        .param("state", "WAITING")
+                        .param("from", "0")
+                        .param("size", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id", is(booking1.getId()), Long.class))
+                .andExpect(jsonPath("$[0].item.id", is(booking1.getItem().getId()), Long.class))
+                .andExpect(jsonPath("$[0].item.name", is(booking1.getItem().getName())))
+                .andExpect(jsonPath("$[0].item.description", is(booking1.getItem().getDescription())))
+                .andExpect(jsonPath("$[0].item.available", is(booking1.getItem().getAvailable())))
+                .andExpect(jsonPath("$[0].item.owner.id", is(booking1.getItem().getOwner().getId()), Long.class))
+                .andExpect(jsonPath("$[0].item.owner.name", is(booking1.getItem().getOwner().getName())))
+                .andExpect(jsonPath("$[0].item.owner.email", is(booking1.getItem().getOwner().getEmail())))
+                .andExpect(jsonPath("$[0].start", is(now.plusHours(1L).toString())))
+                .andExpect(jsonPath("$[0].end", is(now.plusDays(1L).toString())))
+                .andExpect(jsonPath("$[0].status", is(booking1.getStatus().name())))
+                .andExpect(jsonPath("$[1].id", is(booking2.getId()), Long.class))
+                .andExpect(jsonPath("$[1].item.id", is(booking2.getItem().getId()), Long.class))
+                .andExpect(jsonPath("$[1].item.name", is(booking2.getItem().getName())))
+                .andExpect(jsonPath("$[1].item.description", is(booking2.getItem().getDescription())))
+                .andExpect(jsonPath("$[1].item.available", is(booking2.getItem().getAvailable())))
+                .andExpect(jsonPath("$[1].item.owner.id", is(booking2.getItem().getOwner().getId()), Long.class))
+                .andExpect(jsonPath("$[1].item.owner.name", is(booking2.getItem().getOwner().getName())))
+                .andExpect(jsonPath("$[1].item.owner.email", is(booking2.getItem().getOwner().getEmail())))
+                .andExpect(jsonPath("$[1].start", is(now.plusDays(2L).toString())))
+                .andExpect(jsonPath("$[1].end", is(now.plusDays(3L).toString())))
+                .andExpect(jsonPath("$[1].status", is(booking2.getStatus().name())));
+    }
 }
