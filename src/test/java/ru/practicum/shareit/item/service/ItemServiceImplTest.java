@@ -2,39 +2,36 @@ package ru.practicum.shareit.item.service;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import ru.practicum.shareit.booking.dto.BookingDto;
-import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.booking.status.BookingStatus;
-import ru.practicum.shareit.exception.IncorrectPaginationException;
-import ru.practicum.shareit.exception.ItemDoesNotExistException;
-import ru.practicum.shareit.exception.UserDoesNotExistException;
-import ru.practicum.shareit.exception.UserDoesNotExistOrDoesNotHaveAnyItemsException;
+import ru.practicum.shareit.exception.*;
+import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.mapper.CommentMapper;
 import ru.practicum.shareit.item.mapper.ItemMapper;
+import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(MockitoExtension.class)
 class ItemServiceImplTest {
@@ -79,15 +76,26 @@ class ItemServiceImplTest {
             .owner(user2)
             .build();
 
+    LocalDateTime now = LocalDateTime.now();
+
     Booking booking1 = Booking.builder()
             .id(1L)
             .item(item1)
             .booker(user2)
-            .start(LocalDateTime.now())
-            .end(LocalDateTime.now().plusDays(1L))
+            .start(now)
+            .end(now.plusDays(1L))
             .status(BookingStatus.WAITING)
             .build();
 
+    Comment comment = Comment.builder()
+            .id(1L)
+            .text("this is a comment")
+            .item(item1)
+            .author(user2)
+            .created(now)
+            .build();
+
+    CommentDto commentDto = CommentMapper.mapToCommentDto(comment);
 
     @Test
     void postItemWithExistingUserId() {
@@ -322,9 +330,54 @@ class ItemServiceImplTest {
         Mockito.verify(itemRepository, Mockito.times(1)).searchItems("автомобиль");
     }
 
-    /*@Test
+    @Test
     void postComment() {
-    }*/
+        booking1.setStart(now.minusHours(2L));
+        booking1.setEnd(now.minusHours(1L));
+
+        Mockito.when(userRepository.getReferenceById(2L))
+                .thenReturn(user2);
+        Mockito.when(itemRepository.findById(1L))
+                .thenReturn(Optional.of(item1));
+        Mockito.when(bookingRepository.findAllBookingsByItem_Id(1L))
+                .thenReturn(List.of(booking1));
+        Mockito.when(commentRepository.save(comment))
+                .thenReturn(comment);
+
+        CommentDto postedComment = itemService.postComment(1L, comment, 2L);
+        commentDto.setCreated(postedComment.getCreated());
+
+        assertThat(postedComment, equalTo(commentDto));
+
+        Mockito.verify(userRepository, Mockito.times(1)).getReferenceById(2L);
+        Mockito.verify(bookingRepository, Mockito.times(1)).findAllBookingsByItem_Id(1L);
+        Mockito.verify(commentRepository, Mockito.times(1)).save(comment);
+    }
+
+    @Test
+    void postCommentByUserWithNoRightsToPost() {
+        Mockito.when(userRepository.getReferenceById(2L))
+                .thenReturn(user2);
+        Mockito.when(itemRepository.findById(1L))
+                .thenReturn(Optional.of(item1));
+        Mockito.when(bookingRepository.findAllBookingsByItem_Id(1L))
+                .thenReturn(List.of(booking1));
+        Mockito.when(commentRepository.save(comment))
+                .thenThrow(new PostCommentProhibitedException("Вещь с id = " + item1.getId() +
+                        " не была в аренде у пользователя с id = " + user2.getId() +
+                        " либо аренда еще не завершилась."));
+
+        PostCommentProhibitedException postCommentProhibitedException = assertThrows(
+                PostCommentProhibitedException.class, () -> itemService.postComment(1L, comment, 2L));
+
+        assertThat(postCommentProhibitedException.getMessage(), equalTo("Вещь с id = " + item1.getId() +
+                " не была в аренде у пользователя с id = " + user2.getId() +
+                " либо аренда еще не завершилась."));
+
+        Mockito.verify(userRepository, Mockito.times(1)).getReferenceById(2L);
+        Mockito.verify(bookingRepository, Mockito.times(1)).findAllBookingsByItem_Id(1L);
+        Mockito.verify(commentRepository, Mockito.never()).save(comment);
+    }
 
     PageRequest getPage(Integer from, Integer size) {
         if (from != null && size != null) {

@@ -30,4 +30,5 @@ INSERT INTO bookings (start_date, end_date, item_id, booker_id, status) VALUES
 ('2023-06-14 14:25:42', '2023-06-14 15:25:40', 4, 1, 'APPROVED');-- 8, owner - 6
 
 INSERT INTO comments (text, item_id, author_id, created) VALUES
-('Add comment from user1', 2, 1, '2023-06-14 14:25:48.627901');
+('Add comment from user1', 2, 1, '2023-06-14 14:25:48.627901'),
+('Add comment from user5', 2, 5, '2023-06-15 14:25:48.627901');;
