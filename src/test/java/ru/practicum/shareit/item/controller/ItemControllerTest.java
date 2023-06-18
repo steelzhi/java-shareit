@@ -9,6 +9,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.practicum.shareit.exception.EmptyCommentException;
 import ru.practicum.shareit.exception.ItemDoesNotExistException;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
@@ -277,5 +278,22 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$.authorName", is(comment.getAuthor().getName())));
 
         Mockito.verify(itemService, Mockito.times(1)).postComment(1L, comment, 2L);
+    }
+
+    @SneakyThrows
+    @Test
+    void postEmptyComment() {
+        Mockito.when(itemService.postComment(1L, null, 2L))
+                .thenThrow(new EmptyCommentException("Комментарий не может быть пустым"));
+
+        mockMvc.perform(post("/items/{itemId}/comment", 1L)
+                        .header("X-Sharer-User-Id", 2L)
+                        .content(objectMapper.writeValueAsBytes(null))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+
+        Mockito.verify(itemService, Mockito.never()).postComment(1L, null, 2L);
     }
 }

@@ -14,8 +14,7 @@ import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.booking.status.BookingStatus;
 import ru.practicum.shareit.exception.IllegalAccessException;
-import ru.practicum.shareit.exception.IncorrectDateException;
-import ru.practicum.shareit.exception.ItemNotAvailableException;
+import ru.practicum.shareit.exception.*;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
@@ -184,7 +183,6 @@ class BookingServiceImplTest {
                 .thenReturn(booking1.getItem());
         Mockito.when(bookingService.patchBookingWithUpdatedStatus(
                         booking1.getId(), booking1.getItem().getOwner().getId(), true))
-
                 .thenReturn(booking1);
 
         assertThat(booking1, equalTo(updatedBooking1));
@@ -192,6 +190,33 @@ class BookingServiceImplTest {
         Mockito.verify(bookingRepository, Mockito.times(1)).save(updatedBooking1);
         Mockito.verify(itemRepository, Mockito.never())
                 .getReferenceById(booking1.getItem().getId());
+    }
+
+    @Test
+    void patchBookingWithDuplicatedStatus() {
+        booking1.setStatus(BookingStatus.APPROVED);
+
+        Booking updatedBooking1 = Booking.builder()
+                .id(booking1.getId())
+                .item(booking1.getItem())
+                .booker(booking1.getBooker())
+                .start(booking1.getStart())
+                .end(booking1.getEnd())
+                .status(BookingStatus.APPROVED)
+                .build();
+
+        Mockito.when(bookingRepository.findById(booking1.getId()))
+                .thenReturn(Optional.of(booking1));
+        Mockito.when(itemRepository.getReferenceById(booking1.getItem().getId()))
+                .thenReturn(booking1.getItem());
+
+        DuplicateStatusException duplicateStatusException = assertThrows(DuplicateStatusException.class,
+                () -> bookingService.patchBookingWithUpdatedStatus(
+                        booking1.getId(), booking1.getItem().getOwner().getId(), true));
+
+        assertThat(duplicateStatusException.getMessage(), equalTo("Данный статус уже установлен ранее."));
+
+        Mockito.verify(bookingRepository, Mockito.never()).save(updatedBooking1);
     }
 
     @Test
@@ -255,14 +280,141 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void getAllBookingsByUser() {
+    void getAllBookingsByUserStatusWaiting() {
+        Booking booking2 = Booking.builder()
+                .id(2L)
+                .item(item1)
+                .booker(user2)
+                .start(LocalDateTime.now().plusDays(2L))
+                .end(LocalDateTime.now().plusDays(3L))
+                .status(BookingStatus.WAITING)
+                .build();
+
         Mockito.when(userRepository.findById(2L))
                 .thenReturn(Optional.of(user2));
         Mockito.when(bookingRepository.getAllBookingsByBooker_Id(2L))
-                .thenReturn(List.of(booking1));
+                .thenReturn(List.of(booking2, booking1));
 
         assertThat(bookingService.getAllBookingsByUser(2L, "WAITING", null, null),
-                equalTo(List.of(booking1)));
+                equalTo(List.of(booking2, booking1)));
+
+        Mockito.verify(userRepository, Mockito.times(1)).findById(2L);
+        Mockito.verify(bookingRepository, Mockito.times(1)).getAllBookingsByBooker_Id(2L);
+    }
+
+    @Test
+    void getAllBookingsByUserStatusCurrent() {
+        Booking booking2 = Booking.builder()
+                .id(2L)
+                .item(item1)
+                .booker(user2)
+                .start(LocalDateTime.now().plusDays(2L))
+                .end(LocalDateTime.now().plusDays(3L))
+                .status(BookingStatus.WAITING)
+                .build();
+
+        Mockito.when(userRepository.findById(2L))
+                .thenReturn(Optional.of(user2));
+        Mockito.when(bookingRepository.getAllBookingsByBooker_Id(2L))
+                .thenReturn(List.of(booking1, booking2));
+
+        assertThat(bookingService.getAllBookingsByUser(2L, "CURRENT", null, null),
+                equalTo(new ArrayList<>()));
+
+        Mockito.verify(userRepository, Mockito.times(1)).findById(2L);
+        Mockito.verify(bookingRepository, Mockito.times(1)).getAllBookingsByBooker_Id(2L);
+    }
+
+    @Test
+    void getAllBookingsByUserStatusPast() {
+        Booking booking2 = Booking.builder()
+                .id(2L)
+                .item(item1)
+                .booker(user2)
+                .start(LocalDateTime.now().plusDays(2L))
+                .end(LocalDateTime.now().plusDays(3L))
+                .status(BookingStatus.WAITING)
+                .build();
+
+        Mockito.when(userRepository.findById(2L))
+                .thenReturn(Optional.of(user2));
+        Mockito.when(bookingRepository.getAllBookingsByBooker_Id(2L))
+                .thenReturn(List.of(booking1, booking2));
+
+        assertThat(bookingService.getAllBookingsByUser(2L, "PAST", null, null),
+                equalTo(new ArrayList<>()));
+
+        Mockito.verify(userRepository, Mockito.times(1)).findById(2L);
+        Mockito.verify(bookingRepository, Mockito.times(1)).getAllBookingsByBooker_Id(2L);
+    }
+
+    @Test
+    void getAllBookingsByUserStatusRejected() {
+        Booking booking2 = Booking.builder()
+                .id(2L)
+                .item(item1)
+                .booker(user2)
+                .start(LocalDateTime.now().plusDays(2L))
+                .end(LocalDateTime.now().plusDays(3L))
+                .status(BookingStatus.WAITING)
+                .build();
+
+        Mockito.when(userRepository.findById(2L))
+                .thenReturn(Optional.of(user2));
+        Mockito.when(bookingRepository.getAllBookingsByBooker_Id(2L))
+                .thenReturn(List.of(booking1, booking2));
+
+        assertThat(bookingService.getAllBookingsByUser(2L, "REJECTED", null, null),
+                equalTo(new ArrayList<>()));
+
+        Mockito.verify(userRepository, Mockito.times(1)).findById(2L);
+        Mockito.verify(bookingRepository, Mockito.times(1)).getAllBookingsByBooker_Id(2L);
+    }
+
+    @Test
+    void getAllBookingsByUserStatusAll() {
+        Booking booking2 = Booking.builder()
+                .id(2L)
+                .item(item1)
+                .booker(user2)
+                .start(LocalDateTime.now().plusDays(2L))
+                .end(LocalDateTime.now().plusDays(3L))
+                .status(BookingStatus.WAITING)
+                .build();
+
+        Mockito.when(userRepository.findById(2L))
+                .thenReturn(Optional.of(user2));
+        Mockito.when(bookingRepository.getAllBookingsByBooker_Id(2L))
+                .thenReturn(List.of(booking2, booking1));
+
+        assertThat(bookingService.getAllBookingsByUser(2L, "ALL", null, null),
+                equalTo(List.of(booking2, booking1)));
+
+        Mockito.verify(userRepository, Mockito.times(1)).findById(2L);
+        Mockito.verify(bookingRepository, Mockito.times(1)).getAllBookingsByBooker_Id(2L);
+    }
+
+    @Test
+    void getAllBookingsByUserStatusFuture() {
+        booking1.setStart(LocalDateTime.now().plusDays(20L));
+        booking1.setEnd(LocalDateTime.now().plusDays(30L));
+
+        Booking booking2 = Booking.builder()
+                .id(2L)
+                .item(item1)
+                .booker(user2)
+                .start(LocalDateTime.now().plusDays(2L))
+                .end(LocalDateTime.now().plusDays(3L))
+                .status(BookingStatus.WAITING)
+                .build();
+
+        Mockito.when(userRepository.findById(2L))
+                .thenReturn(Optional.of(user2));
+        Mockito.when(bookingRepository.getAllBookingsByBooker_Id(2L))
+                .thenReturn(List.of(booking1, booking2));
+
+        assertThat(bookingService.getAllBookingsByUser(2L, "FUTURE", null, null),
+                equalTo(List.of(booking1, booking2)));
 
         Mockito.verify(userRepository, Mockito.times(1)).findById(2L);
         Mockito.verify(bookingRepository, Mockito.times(1)).getAllBookingsByBooker_Id(2L);
@@ -308,6 +460,25 @@ class BookingServiceImplTest {
 
         assertThat(bookingService.getAllBookingsForUserItems(2L, "WAITING", null, null),
                 equalTo(new ArrayList<>()));
+
+        Mockito.verify(userRepository, Mockito.times(1)).findById(2L);
+        Mockito.verify(bookingRepository, Mockito.times(1))
+                .getAllBookingsForOwnerItems(2L);
+    }
+
+    @Test
+    void getAllBookingsForUserItemsWithIncorrectStatus() {
+        Mockito.when(userRepository.findById(2L))
+                .thenReturn(Optional.of(user2));
+        Mockito.when(bookingRepository.getAllBookingsForOwnerItems(2L))
+                .thenReturn(new ArrayList<>());
+
+        WrongBookingStatusException wrongBookingStatusException = assertThrows(WrongBookingStatusException.class,
+                () -> bookingService.getAllBookingsForUserItems(
+                        2L, "INCORRECT STATUS", null, null));
+
+        assertThat(wrongBookingStatusException.getMessage(),
+                equalTo("Введен некорректный статус бронирования"));
 
         Mockito.verify(userRepository, Mockito.times(1)).findById(2L);
         Mockito.verify(bookingRepository, Mockito.times(1))

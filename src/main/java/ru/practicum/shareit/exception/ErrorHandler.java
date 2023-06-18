@@ -22,6 +22,12 @@ public class ErrorHandler {
                 e.getMessage());
     }
 
+/*    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse hadleDuplicateEmailException(final DuplicateEmailException e) {
+        return new ErrorResponse("Пользователь с таким email уже существует", e.getMessage());
+    }*/
+
     @ExceptionHandler()
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleItemNotAvailable(final ItemNotAvailableException e) {

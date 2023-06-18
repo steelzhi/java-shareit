@@ -112,6 +112,28 @@ class UserControllerTest {
 
     }
 
+/*    @SneakyThrows
+    @Test
+    void postUserWithDuplicateEmail() {
+        User user1Duplicate = User.builder()
+                .id(3L)
+                .name("user1")
+                .email("user1@user.ru")
+                .build();
+
+        Mockito.when(userService.postUser(user1Duplicate))
+                .thenThrow(new DuplicateStatusException("Пользователь с таким email уже существует"));
+
+        mockMvc.perform(post("/users")
+                        .content(objectMapper.writeValueAsBytes(user1Duplicate))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+
+        Mockito.verify(userService, Mockito.times(1)).postUser(user1Duplicate);
+    }*/
+
     @SneakyThrows
     @Test
     void patchUser() {

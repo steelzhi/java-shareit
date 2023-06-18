@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.booking.status.BookingStatus;
@@ -87,7 +88,7 @@ class ItemServiceImplTest {
             .status(BookingStatus.WAITING)
             .build();
 
-    Comment comment = Comment.builder()
+    Comment comment1 = Comment.builder()
             .id(1L)
             .text("this is a comment")
             .item(item1)
@@ -95,7 +96,17 @@ class ItemServiceImplTest {
             .created(now)
             .build();
 
-    CommentDto commentDto = CommentMapper.mapToCommentDto(comment);
+    Comment comment2 = Comment.builder()
+            .id(2L)
+            .text("this is a 2nd comment")
+            .item(item1)
+            .author(user2)
+            .created(now)
+            .build();
+
+    CommentDto commentDto = CommentMapper.mapToCommentDto(comment1);
+    CommentDto commentDto2 = CommentMapper.mapToCommentDto(comment2);
+    List<CommentDto> commentDtos = CommentMapper.mapToCommentDto(List.of(comment1, comment2));
 
     @Test
     void postItemWithExistingUserId() {
@@ -210,7 +221,7 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void getItemDtoByCorrectId() {
+    void getItemDtoWithCorrectId() {
         Mockito.when(itemRepository.findById(1L))
                 .thenReturn(Optional.of(item1));
         Mockito.when(itemRepository.getReferenceById(1L))
@@ -230,7 +241,7 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void getItemDtoByNotExistingId() {
+    void getItemDtoWithNotExistingId() {
         Mockito.when(itemRepository.findById(100L))
                 .thenThrow(new ItemDoesNotExistException("Вещи с таким id не существует"));
 
@@ -240,6 +251,103 @@ class ItemServiceImplTest {
         assertEquals(itemDoesNotExistException.getMessage(), "Вещи с таким id не существует");
 
         Mockito.verify(itemRepository, Mockito.times(1)).findById(100L);
+    }
+
+    @Test
+    void getItemDtoWithSortedBookings() {
+        Booking futureBooking1 = Booking.builder()
+                .id(2L)
+                .item(item1)
+                .booker(user2)
+                .start(now.plusDays(2L))
+                .end(now.plusDays(3L))
+                .status(BookingStatus.WAITING)
+                .build();
+
+        Booking futureBooking2 = Booking.builder()
+                .id(3L)
+                .item(item1)
+                .booker(user2)
+                .start(now.plusDays(4L))
+                .end(now.plusDays(5L))
+                .status(BookingStatus.WAITING)
+                .build();
+
+        Booking pastBooking1 = Booking.builder()
+                .id(4L)
+                .item(item1)
+                .booker(user2)
+                .start(now.minusDays(2L))
+                .end(now.minusDays(3L))
+                .status(BookingStatus.APPROVED)
+                .build();
+
+        Booking pastBooking2 = Booking.builder()
+                .id(5L)
+                .item(item1)
+                .booker(user2)
+                .start(now.minusDays(4L))
+                .end(now.minusDays(5L))
+                .status(BookingStatus.APPROVED)
+                .build();
+
+        Mockito.when(itemRepository.findById(1L))
+                .thenReturn(Optional.of(item1));
+        Mockito.when(itemRepository.getReferenceById(1L))
+                .thenReturn(item1);
+        Mockito.when(bookingRepository.getAllBookingsByOwner_IdAndItem_Id(1L, 1L))
+                .thenReturn(List.of(pastBooking2, pastBooking1, futureBooking1, futureBooking2));
+        Mockito.when(commentRepository.findAllByItem_Id(1L))
+                .thenReturn(new ArrayList<>());
+        ItemDto itemDto = ItemMapper.mapToItemDto(item1,
+                BookingMapper.mapToBookingDto(pastBooking1),
+                BookingMapper.mapToBookingDto(futureBooking1),
+                new ArrayList<>());
+
+        assertThat(itemDto, equalTo(itemService.getItemDtoById(1L, 1L)));
+        Mockito.verify(itemRepository, Mockito.times(1)).findById(1L);
+        Mockito.verify(itemRepository, Mockito.times(1)).getReferenceById(1L);
+        Mockito.verify(bookingRepository, Mockito.times(1))
+                .getAllBookingsByOwner_IdAndItem_Id(1L, 1L);
+        Mockito.verify(commentRepository, Mockito.times(1)).findAllByItem_Id(1L);
+    }
+
+    @Test
+    void getItemDtoWhenUserIsNotOwnerOfTheItem() {
+        Booking futureBooking1 = Booking.builder()
+                .id(2L)
+                .item(item1)
+                .booker(user2)
+                .start(now.plusDays(2L))
+                .end(now.plusDays(3L))
+                .status(BookingStatus.WAITING)
+                .build();
+
+        Booking pastBooking1 = Booking.builder()
+                .id(4L)
+                .item(item1)
+                .booker(user2)
+                .start(now.minusDays(2L))
+                .end(now.minusDays(3L))
+                .status(BookingStatus.APPROVED)
+                .build();
+
+        Mockito.when(itemRepository.findById(1L))
+                .thenReturn(Optional.of(item1));
+        Mockito.when(itemRepository.getReferenceById(1L))
+                .thenReturn(item1);
+        Mockito.when(bookingRepository.getAllBookingsByOwner_IdAndItem_Id(2L, 1L))
+                .thenReturn(List.of(pastBooking1, futureBooking1));
+        Mockito.when(commentRepository.findAllByItem_Id(1L))
+                .thenReturn(new ArrayList<>());
+        ItemDto itemDto = ItemMapper.mapToItemDto(item1, null, null, new ArrayList<>());
+
+        assertThat(itemDto, equalTo(itemService.getItemDtoById(1L, 2L)));
+        Mockito.verify(itemRepository, Mockito.times(1)).findById(1L);
+        Mockito.verify(itemRepository, Mockito.times(1)).getReferenceById(1L);
+        Mockito.verify(bookingRepository, Mockito.times(1))
+                .getAllBookingsByOwner_IdAndItem_Id(2L, 1L);
+        Mockito.verify(commentRepository, Mockito.times(1)).findAllByItem_Id(1L);
     }
 
     @Test
@@ -323,6 +431,32 @@ class ItemServiceImplTest {
     }
 
     @Test
+    void searchItemsWithPagination() {
+        Page<Item> pagedList = new PageImpl(List.of(item1));
+
+        Mockito.when(itemRepository.searchItems("шлифо", getPage(0, 5)))
+                .thenReturn(pagedList);
+
+        List<Item> foundItems = itemService.searchItems("шлифо", 0, 5);
+        assertThat(foundItems, equalTo(List.of(item1)));
+        Mockito.verify(itemRepository, Mockito.times(1))
+                .searchItems("шлифо", getPage(0, 5));
+    }
+
+    @Test
+    void searchItemsWithPaginationEmptyPage() {
+        Page<Item> pagedList = new PageImpl(new ArrayList<>());
+
+        Mockito.when(itemRepository.searchItems("шлифо", getPage(2, 5)))
+                .thenReturn(pagedList);
+
+        List<Item> foundItems = itemService.searchItems("шлифо", 2, 5);
+        assertThat(foundItems, equalTo(new ArrayList<>()));
+        Mockito.verify(itemRepository, Mockito.times(1))
+                .searchItems("шлифо", getPage(2, 5));
+    }
+
+    @Test
     void searchItemsWithNoItemMatch() {
         Mockito.when(itemService.searchItems("автомобиль", null, null))
                 .thenReturn(new ArrayList<>());
@@ -343,17 +477,25 @@ class ItemServiceImplTest {
                 .thenReturn(Optional.of(item1));
         Mockito.when(bookingRepository.findAllBookingsByItem_Id(1L))
                 .thenReturn(List.of(booking1));
-        Mockito.when(commentRepository.save(comment))
-                .thenReturn(comment);
+        Mockito.when(commentRepository.save(comment1))
+                .thenReturn(comment1);
 
-        CommentDto postedComment = itemService.postComment(1L, comment, 2L);
+        CommentDto postedComment = itemService.postComment(1L, comment1, 2L);
         commentDto.setCreated(postedComment.getCreated());
 
-        assertThat(postedComment, equalTo(commentDto));
+        Mockito.when(commentRepository.save(comment2))
+                .thenReturn(comment2);
+        CommentDto postedComment2 = itemService.postComment(1L, comment2, 2L);
+        commentDto2.setCreated(postedComment2.getCreated());
 
-        Mockito.verify(userRepository, Mockito.times(1)).getReferenceById(2L);
-        Mockito.verify(bookingRepository, Mockito.times(1)).findAllBookingsByItem_Id(1L);
-        Mockito.verify(commentRepository, Mockito.times(1)).save(comment);
+        commentDtos.get(1).setCreated(postedComment2.getCreated());
+        assertThat(postedComment, equalTo(commentDto));
+        assertThat(postedComment2, equalTo(commentDtos.get(1)));
+
+        Mockito.verify(userRepository, Mockito.times(2)).getReferenceById(2L);
+        Mockito.verify(bookingRepository, Mockito.times(2)).findAllBookingsByItem_Id(1L);
+        Mockito.verify(commentRepository, Mockito.times(1)).save(comment1);
+        Mockito.verify(commentRepository, Mockito.times(1)).save(comment2);
     }
 
     @Test
@@ -364,13 +506,13 @@ class ItemServiceImplTest {
                 .thenReturn(Optional.of(item1));
         Mockito.when(bookingRepository.findAllBookingsByItem_Id(1L))
                 .thenReturn(List.of(booking1));
-        Mockito.when(commentRepository.save(comment))
+        Mockito.when(commentRepository.save(comment1))
                 .thenThrow(new PostCommentProhibitedException("Вещь с id = " + item1.getId() +
                         " не была в аренде у пользователя с id = " + user2.getId() +
                         " либо аренда еще не завершилась."));
 
         PostCommentProhibitedException postCommentProhibitedException = assertThrows(
-                PostCommentProhibitedException.class, () -> itemService.postComment(1L, comment, 2L));
+                PostCommentProhibitedException.class, () -> itemService.postComment(1L, comment1, 2L));
 
         assertThat(postCommentProhibitedException.getMessage(), equalTo("Вещь с id = " + item1.getId() +
                 " не была в аренде у пользователя с id = " + user2.getId() +
@@ -378,7 +520,7 @@ class ItemServiceImplTest {
 
         Mockito.verify(userRepository, Mockito.times(1)).getReferenceById(2L);
         Mockito.verify(bookingRepository, Mockito.times(1)).findAllBookingsByItem_Id(1L);
-        Mockito.verify(commentRepository, Mockito.never()).save(comment);
+        Mockito.verify(commentRepository, Mockito.never()).save(comment1);
     }
 
     PageRequest getPage(Integer from, Integer size) {

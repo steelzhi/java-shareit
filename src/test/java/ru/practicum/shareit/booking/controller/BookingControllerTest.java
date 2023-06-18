@@ -14,6 +14,10 @@ import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.service.BookingService;
 import ru.practicum.shareit.booking.status.BookingStatus;
+import ru.practicum.shareit.exception.BookingDoesNotExistException;
+import ru.practicum.shareit.exception.DuplicateStatusException;
+import ru.practicum.shareit.exception.IllegalBookingAttemptException;
+import ru.practicum.shareit.exception.WrongBookingStatusException;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
@@ -111,6 +115,23 @@ class BookingControllerTest {
 
     @SneakyThrows
     @Test
+    void createBookingByItemOwner() {
+        Mockito.when(bookingService.createBooking(bookingDto, 2L))
+                .thenThrow(new IllegalBookingAttemptException("Владелец вещи не может бронировать свою вещь"));
+
+        mockMvc.perform(post("/bookings")
+                        .header("X-Sharer-User-Id", 2L)
+                        .content(objectMapper.writeValueAsBytes(bookingDto))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+
+        Mockito.verify(bookingService, Mockito.times(1)).createBooking(bookingDto, 2L);
+    }
+
+    @SneakyThrows
+    @Test
     void patchBookingWithUpdatedStatus() {
         Booking updatedBooking = Booking.builder()
                 .id(booking1.getId())
@@ -146,7 +167,43 @@ class BookingControllerTest {
 
         Mockito.verify(bookingService, Mockito.times(1))
                 .patchBookingWithUpdatedStatus(1L, 1L, true);
+    }
 
+    @SneakyThrows
+    @Test
+    void patchBookingWithDuplicateStatus() {
+        Booking booking = Booking.builder()
+                .id(booking1.getId())
+                .item(booking1.getItem())
+                .booker(booking1.getBooker())
+                .start(booking1.getStart())
+                .end(booking1.getEnd())
+                .status(BookingStatus.APPROVED)
+                .build();
+
+        Booking updatedBooking = Booking.builder()
+                .id(booking1.getId())
+                .item(booking1.getItem())
+                .booker(booking1.getBooker())
+                .start(booking1.getStart())
+                .end(booking1.getEnd())
+                .status(BookingStatus.APPROVED)
+                .build();
+
+        Mockito.when(bookingService.patchBookingWithUpdatedStatus(1L, 1L, true))
+                .thenThrow(new DuplicateStatusException("Данный статус уже установлен"));
+
+        mockMvc.perform(patch("/bookings/{bookingId}", booking1.getId())
+                        .header("X-Sharer-User-Id", 1L)
+                        .param("approved", "true")
+                        .content(objectMapper.writeValueAsBytes(bookingDto))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+
+        Mockito.verify(bookingService, Mockito.times(1))
+                .patchBookingWithUpdatedStatus(1L, 1L, true);
     }
 
     @SneakyThrows
@@ -171,6 +228,19 @@ class BookingControllerTest {
                 .andExpect(jsonPath("$.status", is(booking1.getStatus().name())));
 
         Mockito.verify(bookingService, Mockito.times(1)).getBooking(1L, 2L);
+    }
+
+    @SneakyThrows
+    @Test
+    void getNotExistingBooking() {
+        Mockito.when(bookingService.getBooking(100L, 2L))
+                .thenThrow(new BookingDoesNotExistException("Бронирование не найдено"));
+
+        mockMvc.perform(get("/bookings/100")
+                        .header("X-Sharer-User-Id", 2L))
+                .andExpect(status().isNotFound());
+
+        Mockito.verify(bookingService, Mockito.times(1)).getBooking(100L, 2L);
     }
 
     @SneakyThrows
@@ -210,6 +280,21 @@ class BookingControllerTest {
 
         Mockito.verify(bookingService, Mockito.times(1))
                 .getAllBookingsByUser(2L, "WAITING", null, null);
+    }
+
+    @SneakyThrows
+    @Test
+    void getAllBookingsByUserWithUnsupportedStatus() {
+        Mockito.when(bookingService.getAllBookingsByUser(2L, "UNSUPPORTED", null, null))
+                .thenThrow(new WrongBookingStatusException("Unknown state: UNSUPPORTED_STATUS"));
+
+        mockMvc.perform(get("/bookings")
+                        .header("X-Sharer-User-Id", 2L)
+                        .param("state", "UNSUPPORTED"))
+                .andExpect(status().isBadRequest());
+
+        Mockito.verify(bookingService, Mockito.times(1))
+                .getAllBookingsByUser(2L, "UNSUPPORTED", null, null);
     }
 
     @SneakyThrows

@@ -9,6 +9,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.practicum.shareit.exception.EmptyDescriptionException;
+import ru.practicum.shareit.exception.RequestDoesNotExistException;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.request.mapper.ItemRequestMapper;
@@ -102,6 +104,27 @@ class ItemRequestControllerTest {
 
     @SneakyThrows
     @Test
+    void postItemRequestWithEmptyDescription() {
+        ItemRequest itemRequestWithoutDescription = ItemRequest.builder()
+                .id(1L)
+                .build();
+        Mockito.when(itemRequestService.postItemRequest(2L, itemRequestWithoutDescription))
+                .thenThrow(new EmptyDescriptionException("Описание запроса не может быть пустым"));
+
+        mockMvc.perform(post("/requests")
+                        .header("X-Sharer-User-Id", 2L)
+                        .content(objectMapper.writeValueAsBytes(itemRequestWithoutDescription))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+
+        Mockito.verify(itemRequestService, Mockito.times(1))
+                .postItemRequest(2L, itemRequestWithoutDescription);
+    }
+
+    @SneakyThrows
+    @Test
     void getAllRequestsMadeByRequester() {
         Mockito.when(itemRequestService.getAllRequestsMadeByRequester(2L))
                 .thenReturn(List.of(itemRequestDto));
@@ -153,5 +176,18 @@ class ItemRequestControllerTest {
                 .andExpect(jsonPath("$.created", is(now.toString())));
 
         Mockito.verify(itemRequestService, Mockito.times(1)).getRequestDto(2L, 1L);
+    }
+
+    @SneakyThrows
+    @Test
+    void getNotExistingRequestDto() {
+        Mockito.when(itemRequestService.getRequestDto(2L, 100L))
+                .thenThrow(new RequestDoesNotExistException("Запрос не найден"));
+
+        mockMvc.perform(get("/requests/100")
+                        .header("X-Sharer-User-Id", 2L))
+                .andExpect(status().isNotFound());
+
+        Mockito.verify(itemRequestService, Mockito.times(1)).getRequestDto(2L, 100L);
     }
 }
