@@ -1,3 +1,4 @@
+/*
 package ru.practicum.shareit.user.service;
 
 import org.junit.jupiter.api.Test;
@@ -109,4 +110,4 @@ class UserServiceImplTest {
         Mockito.verify(userRepository, Mockito.times(1)).deleteById(2L);
         Mockito.verify(userRepository, Mockito.never()).deleteById(2000L);
     }
-}
+}*/

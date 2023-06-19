@@ -9,12 +9,15 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.EmptyDescriptionException;
 import ru.practicum.shareit.exception.RequestDoesNotExistException;
 import ru.practicum.shareit.exception.UserDoesNotExistException;
+import ru.practicum.shareit.item.dto.ItemDtoForSearch;
+import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.request.mapper.ItemRequestMapper;
 import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.request.repository.ItemRequestRepository;
+import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 import ru.practicum.shareit.util.Pagination;
@@ -32,25 +35,37 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
     @Transactional
     @Override
-    public ItemRequest postItemRequest(long userId, ItemRequest itemRequest) {
-        checkIfDescriptionIsBlank(itemRequest);
+    public ItemRequestDto postItemRequestDto(long userId, ItemRequestDto itemRequestDto) {
+        checkIfDescriptionIsBlank(itemRequestDto);
         User requester = checkAndGetUserIfExists(userId);
-        itemRequest.setRequester(requester);
-        itemRequest.setCreated(LocalDateTime.now());
-        return itemRequestRepository.save(itemRequest);
+        itemRequestDto.setRequesterDto(UserMapper.mapToUserDto(requester));
+        itemRequestDto.setCreated(LocalDateTime.now());
+        ItemRequest itemRequest = ItemRequestMapper.mapToItemRequest(itemRequestDto);
+        ItemRequest savedItemRequest = itemRequestRepository.save(itemRequest);
+        itemRequestDto.setId(savedItemRequest.getId());
+        return itemRequestDto;
     }
 
     @Transactional(readOnly = true)
     @Override
-    public List<ItemRequestDto> getAllRequestsMadeByRequester(long userId) {
+    public List<ItemRequestDto> getAllRequestDtosMadeByRequester(long userId) {
         checkAndGetUserIfExists(userId);
         List<ItemRequest> requestersRequests = itemRequestRepository.findAllByRequester_Id(userId);
-        List<ItemRequestDto> itemRequestDtos = getItemRequestDtos(requestersRequests);
+/*        List<ItemRequestDto> itemRequestDtos = getItemRequestDtos(requestersRequests);
+        for (ItemRequestDto itemRequestDto : itemRequestDtos) {
+            itemRequestDtos
+        }*/
+        List<ItemRequestDto> itemRequestDtos = new ArrayList<>();
+        for (ItemRequest itemRequest : requestersRequests) {
+            itemRequestDtos.add(ItemRequestMapper.mapToItemRequestDto(itemRequest, getAllProposedItemsForRequest(itemRequest.getId())));
+        }
+
+        //ItemRequestMapper.mapToItemRequestDto(itemRequest, getAllProposedItemsForRequest(requestId));
         return itemRequestDtos;
     }
 
     @Override
-    public List<ItemRequestDto> getPagedRequestsMadeByOtherUsers(long userId, Integer from, Integer size) {
+    public List<ItemRequestDto> getPagedRequestDtosMadeByOtherUsers(long userId, Integer from, Integer size) {
         Pagination.checkIfPaginationParamsAreNotCorrect(from, size);
 
         List<ItemRequest> itemRequests = new ArrayList<>();
@@ -82,22 +97,28 @@ public class ItemRequestServiceImpl implements ItemRequestService {
                 .orElseThrow(() -> new UserDoesNotExistException("Пользователя с таким id не существует"));
     }
 
-    private List<Item> getAllProposedItemsForRequest(long requestId) {
-        return itemRepository.findAllByRequestId(requestId);
+    private List<ItemDtoForSearch> getAllProposedItemsForRequest(long requestId) {
+        List<Item> items = itemRepository.findAllByRequestId(requestId);
+        List<ItemDtoForSearch> itemDtosForSearch = new ArrayList<>();
+        for (Item item : items) {
+            itemDtosForSearch.add(ItemMapper.mapToItemDtoForSearch(item));
+        }
+
+        return itemDtosForSearch;
     }
 
     private List<ItemRequestDto> getItemRequestDtos(List<ItemRequest> itemRequests) {
         List<ItemRequestDto> itemRequestDtos = new ArrayList<>();
         for (ItemRequest itemRequest : itemRequests) {
-            List<Item> proposedItems = getAllProposedItemsForRequest(itemRequest.getId());
+            List<ItemDtoForSearch> proposedItems = getAllProposedItemsForRequest(itemRequest.getId());
             ItemRequestDto itemRequestDto = ItemRequestMapper.mapToItemRequestDto(itemRequest, proposedItems);
             itemRequestDtos.add(itemRequestDto);
         }
         return itemRequestDtos;
     }
 
-    private void checkIfDescriptionIsBlank(ItemRequest itemRequest) {
-        if (itemRequest.getDescription() == null || itemRequest.getDescription().isBlank()) {
+    private void checkIfDescriptionIsBlank(ItemRequestDto itemRequestDto) {
+        if (itemRequestDto.getDescription() == null || itemRequestDto.getDescription().isBlank()) {
             throw new EmptyDescriptionException("Описание в запросе не должно быть пустым");
         }
     }

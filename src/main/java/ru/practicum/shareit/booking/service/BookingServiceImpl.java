@@ -6,7 +6,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.shareit.booking.dto.BookingDto;
+import ru.practicum.shareit.booking.dto.BookingDtoIn;
+import ru.practicum.shareit.booking.dto.BookingDtoOutForController;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
@@ -33,18 +34,20 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional
-    public Booking createBooking(BookingDto bookingDto, long userId) {
+    public BookingDtoOutForController createBookingDto(BookingDtoIn bookingDto, long userId) {
         checkIfTheItemIsAvailableAntOtherParamsAreCorrect(bookingDto, userId);
         bookingDto.setStatus(BookingStatus.WAITING);
         Long itemDtoId = bookingDto.getItemId();
         Booking booking = BookingMapper.mapToBooking(bookingDto, itemRepository.getReferenceById(itemDtoId),
                 userRepository.getReferenceById(userId));
-        return bookingRepository.save(booking);
+        Booking savedBooking = bookingRepository.save(booking);
+        BookingDtoOutForController outcomingBookingDto = BookingMapper.mapToBookingDtoOutForController(booking);
+        return outcomingBookingDto;
     }
 
     @Override
     @Transactional
-    public Booking patchBookingWithUpdatedStatus(long bookingId, long userId, Boolean approved) {
+    public BookingDtoOutForController patchBookingDtoWithUpdatedStatus(long bookingId, long userId, Boolean approved) {
         Booking booking = getBookingIfUserHasPatchingRights(bookingId, userId);
         BookingStatus currentStatus = booking.getStatus();
         String statusName = (approved == true) ? BookingStatus.APPROVED.name() : BookingStatus.REJECTED.name();
@@ -55,18 +58,20 @@ public class BookingServiceImpl implements BookingService {
 
         booking.setStatus(newStatus);
         bookingRepository.save(booking);
-
-        return bookingRepository.getReferenceById(bookingId);
+        BookingDtoOutForController bookingDto = BookingMapper.mapToBookingDtoOutForController(booking);
+        return bookingDto;
     }
 
     @Override
-    public Booking getBooking(long bookingId, long userId) {
-        return getBookingIfUserHasAccessRights(bookingId, userId);
+    public BookingDtoOutForController getBookingDto(long bookingId, long userId) {
+        Booking booking = getBookingIfUserHasAccessRights(bookingId, userId);
+        BookingDtoOutForController bookingDto = BookingMapper.mapToBookingDtoOutForController(booking);
+        return bookingDto;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Booking> getAllBookingsByUser(long userId, String bookingStatus, Integer from, Integer size) {
+    public List<BookingDtoOutForController> getAllBookingDtosByUser(long userId, String bookingStatus, Integer from, Integer size) {
         checkIfUserExists(userId);
         Pagination.checkIfPaginationParamsAreNotCorrect(from, size);
 
@@ -81,12 +86,14 @@ public class BookingServiceImpl implements BookingService {
             userBookings = bookingRepository.getAllBookingsByBooker_Id(userId);
         }
 
-        return getBookingsWithDemandedStatus(userBookings, bookingStatus);
+        List<Booking> bookings = getBookingsWithDemandedStatus(userBookings, bookingStatus);
+        List<BookingDtoOutForController> bookingDtos = BookingMapper.mapToBookingDtoOutForController(bookings);
+        return bookingDtos;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Booking> getAllBookingsForUserItems(long userId, String bookingStatus, Integer from, Integer size) {
+    public List<BookingDtoOutForController> getAllBookingDtosForUserItems(long userId, String bookingStatus, Integer from, Integer size) {
         checkIfUserExists(userId);
         Pagination.checkIfPaginationParamsAreNotCorrect(from, size);
 
@@ -101,7 +108,9 @@ public class BookingServiceImpl implements BookingService {
             itemBookings = bookingRepository.getAllBookingsForOwnerItems(userId);
         }
 
-        return getBookingsWithDemandedStatus(itemBookings, bookingStatus);
+        List<Booking> bookings = getBookingsWithDemandedStatus(itemBookings, bookingStatus);
+        List<BookingDtoOutForController> bookingDtos = BookingMapper.mapToBookingDtoOutForController(bookings);
+        return bookingDtos;
     }
 
     private List<Booking> getBookingsWithDemandedStatus(List<Booking> bookings, String status) {
@@ -190,10 +199,10 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Transactional(readOnly = true)
-    private void checkIfTheItemIsAvailableAntOtherParamsAreCorrect(BookingDto bookingDto, long userId) {
+    private void checkIfTheItemIsAvailableAntOtherParamsAreCorrect(BookingDtoIn bookingDto, long userId) {
         checkIfUserExists(userId);
 
-        Item itemDto = itemRepository.findById(bookingDto.getItemId())
+        Item item = itemRepository.findById(bookingDto.getItemId())
                 .orElseThrow(() -> new ItemDoesNotExistException("Вещи с таким id не существует"));
 
         if (bookingDto.getEnd() == null
@@ -204,10 +213,10 @@ public class BookingServiceImpl implements BookingService {
                 || bookingDto.getEnd().equals(bookingDto.getStart())) {
             throw new IncorrectDateException("Некорректная дата аренды");
         }
-        if (!itemDto.getAvailable()) {
+        if (!item.getAvailable()) {
             throw new ItemNotAvailableException("Данная вещь в настоящий момент занята");
         }
-        if (userId == itemDto.getOwner().getId()) {
+        if (userId == item.getOwner().getId()) {
             throw new IllegalBookingAttemptException("Владелец вещи не может бронировать свою вещь");
         }
     }

@@ -31,11 +31,9 @@ public class ItemRequest {
     @ManyToOne
     private User requester;
 
-    @NotBlank
     @Column(name = "description")
     private String description;
 
-    @NotNull
     @Column(name = "created")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime created;

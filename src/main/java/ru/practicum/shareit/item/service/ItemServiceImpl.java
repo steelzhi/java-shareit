@@ -6,7 +6,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.shareit.booking.dto.BookingDto;
+import ru.practicum.shareit.booking.dto.BookingDtoOutForItemDto;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
@@ -14,12 +14,15 @@ import ru.practicum.shareit.booking.status.BookingStatus;
 import ru.practicum.shareit.exception.*;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemDtoForSearch;
 import ru.practicum.shareit.item.mapper.CommentMapper;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 import ru.practicum.shareit.util.Pagination;
@@ -38,35 +41,47 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional
-    public Item postItem(Item item, long userId) {
-        User user = checkAndGetUserIfExists(userId);
-        item.setOwner(user);
-        return itemRepository.save(item);
+    public ItemDto postItemDto(ItemDto itemDto, long userId) {
+        UserDto userDto = checkAndGetUserDtoIfExists(userId);
+        itemDto.setOwner(userDto);
+        Item item = ItemMapper.mapToItem(itemDto);
+        item.setRequestId(itemDto.getRequestId());
+        Item savedItem = itemRepository.save(item);
+        itemDto.setId(savedItem.getId());
+        return itemDto;
     }
 
     @Override
     @Transactional
-    public Item patchItem(long itemId, Item item, long userId) {
+    public ItemDto patchItemDto(long itemId, ItemDto itemDto, long userId) {
         checkIfUserAndItemExists(userId, itemId);
-        item.setId(itemId);
-        Item existingItemDto = getItem(itemId);
-        if (item.getName() == null) {
-            item.setName(existingItemDto.getName());
-        }
-        if (item.getDescription() == null) {
-            item.setDescription(existingItemDto.getDescription());
-        }
-        if (item.getAvailable() == null) {
-            item.setAvailable(existingItemDto.getAvailable());
-        }
-        if (item.getRequestId() == null) {
-            item.setRequestId(existingItemDto.getRequestId());
-        }
-        if (item.getOwner() == null) {
-            item.setOwner(existingItemDto.getOwner());
-        }
+        itemDto.setId(itemId);
+        Item existingItem = getItem(itemId);
+        ItemDto existingItemDto = getItemDtoWithBookingsAndComments(existingItem, userId);
 
-        return itemRepository.save(item);
+        if (itemDto.getName() == null) {
+            itemDto.setName(existingItemDto.getName());
+        }
+        if (itemDto.getDescription() == null) {
+            itemDto.setDescription(existingItemDto.getDescription());
+        }
+        if (itemDto.getAvailable() == null) {
+            itemDto.setAvailable(existingItemDto.getAvailable());
+        }
+        if (itemDto.getRequestId() == null) {
+            itemDto.setRequestId(existingItemDto.getRequestId());
+        }
+        if (itemDto.getOwner() == null) {
+            itemDto.setOwner(existingItemDto.getOwner());
+        }
+        Item item = ItemMapper.mapToItem(itemDto);
+        itemRepository.save(item);
+
+        itemDto.setLastBooking(existingItemDto.getLastBooking());
+        itemDto.setNextBooking(existingItemDto.getNextBooking());
+        itemDto.setComments(existingItemDto.getComments());
+
+        return itemDto;
     }
 
     @Override
@@ -79,7 +94,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     @Transactional(readOnly = true)
     public List<ItemDto> getAllItemsDtoByUser(long userId, Integer from, Integer size) {
-        checkAndGetUserIfExists(userId);
+        checkAndGetUserDtoIfExists(userId);
         Pagination.checkIfPaginationParamsAreNotCorrect(from, size);
 
         List<Item> itemsList = new ArrayList<>();
@@ -110,29 +125,34 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<Item> searchItems(String text, Integer from, Integer size) {
+    public List<ItemDtoForSearch> searchItemDto(String text, Integer from, Integer size) {
         Pagination.checkIfPaginationParamsAreNotCorrect(from, size);
 
-        List<Item> foundBySearch = new ArrayList<>();
+        List<Item> itemsFoundBySearch = new ArrayList<>();
         if (!text.isBlank()) {
             if (from != null && size != null) {
                 PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size, Sort.by("id").descending());
                 Page<Item> pagedList = itemRepository.searchItems(text, page);
                 if (pagedList != null) {
-                    foundBySearch = pagedList.getContent();
+                    itemsFoundBySearch = pagedList.getContent();
                 }
             } else {
-                foundBySearch = itemRepository.searchItems(text);
+                itemsFoundBySearch = itemRepository.searchItems(text);
             }
         }
 
-        return foundBySearch;
+        List<ItemDtoForSearch> itemDtos2FoundBySearch = new ArrayList<>();
+        for (Item item : itemsFoundBySearch) {
+            itemDtos2FoundBySearch.add(ItemMapper.mapToItemDtoForSearch(item));
+        }
+
+        return itemDtos2FoundBySearch;
     }
 
     @Override
     @Transactional
-    public CommentDto postComment(long itemId, Comment comment, long userId) {
-        if (comment.getText().isBlank()) {
+    public CommentDto postCommentDto(long itemId, CommentDto commentDto, long userId) {
+        if (commentDto.getText().isBlank()) {
             throw new EmptyCommentException("Комментарий не может быть пустым.");
         }
 
@@ -140,8 +160,10 @@ public class ItemServiceImpl implements ItemService {
         User author = userRepository.getReferenceById(userId);
         List<Booking> allBookingsForItem = bookingRepository.findAllBookingsByItem_Id(itemId);
         LocalDateTime now = LocalDateTime.now().plusSeconds(1);
+        Comment comment = new Comment();
         for (Booking booking : allBookingsForItem) {
             if (booking.getBooker().getId() == userId && booking.getEnd().isBefore(now)) {
+                comment.setText(commentDto.getText());
                 comment.setItem(item);
                 comment.setAuthor(author);
                 comment.setCreated(now);
@@ -155,14 +177,15 @@ public class ItemServiceImpl implements ItemService {
                 userId + " либо аренда еще не завершилась.");
     }
 
-    private User checkAndGetUserIfExists(long userId) {
-        return userRepository.findById(userId)
+    private UserDto checkAndGetUserDtoIfExists(long userId) {
+        User user =  userRepository.findById(userId)
                 .orElseThrow(() -> new UserDoesNotExistException("Пользователя с таким id не существует"));
+        return UserMapper.mapToUserDto(user);
     }
 
     @Transactional(readOnly = true)
     private List<Item> getAllItemsByOwner(long userId) {
-        checkAndGetUserIfExists(userId);
+        checkAndGetUserDtoIfExists(userId);
         return itemRepository.findAllByOwner_Id(userId);
     }
 
@@ -181,12 +204,12 @@ public class ItemServiceImpl implements ItemService {
 
     @Transactional(readOnly = true)
     private ItemDto getItemDtoWithBookingsAndComments(Item item, long userId) {
-        List<BookingDto> ownersBookings = BookingMapper.mapToBookingDto(
+        List<BookingDtoOutForItemDto> ownersBookings = BookingMapper.mapToBookingDtoOutForItemDto(
                 bookingRepository.getAllBookingsByOwner_IdAndItem_Id(userId, item.getId()));
-        List<BookingDto> pastBookings = new ArrayList<>();
-        List<BookingDto> futureBookings = new ArrayList<>();
+        List<BookingDtoOutForItemDto> pastBookings = new ArrayList<>();
+        List<BookingDtoOutForItemDto> futureBookings = new ArrayList<>();
         LocalDateTime now = LocalDateTime.now();
-        for (BookingDto bookingDto : ownersBookings) {
+        for (BookingDtoOutForItemDto bookingDto : ownersBookings) {
             if ((bookingDto.getEnd().isBefore(now) && bookingDto.getStatus() != BookingStatus.REJECTED)
                     || (bookingDto.getStart().isBefore(now) && bookingDto.getEnd().isAfter(now)
                     && bookingDto.getStatus() == BookingStatus.APPROVED)) {
@@ -196,8 +219,8 @@ public class ItemServiceImpl implements ItemService {
                 futureBookings.add(bookingDto);
             }
         }
-        BookingDto lastBookingDto = null;
-        BookingDto nextBookingDto = null;
+        BookingDtoOutForItemDto lastBookingDto = null;
+        BookingDtoOutForItemDto nextBookingDto = null;
 
         if (isUserOwnerOfItem(item.getId(), userId)) {
             if (!pastBookings.isEmpty()) {

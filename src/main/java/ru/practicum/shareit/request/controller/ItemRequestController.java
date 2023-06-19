@@ -15,14 +15,14 @@ public class ItemRequestController {
     private final ItemRequestService itemRequestService;
 
     @PostMapping
-    public ItemRequest postItemRequest(@RequestHeader("X-Sharer-User-Id") long userId,
-                                       @RequestBody ItemRequest itemRequest) {
-        return itemRequestService.postItemRequest(userId, itemRequest);
+    public ItemRequestDto postItemRequestDto(@RequestHeader("X-Sharer-User-Id") long userId,
+                                       @RequestBody ItemRequestDto itemRequestDto) {
+        return itemRequestService.postItemRequestDto(userId, itemRequestDto);
     }
 
     @GetMapping
-    public List<ItemRequestDto> getAllRequestsMadeByRequester(@RequestHeader("X-Sharer-User-Id") long userId) {
-        return itemRequestService.getAllRequestsMadeByRequester(userId);
+    public List<ItemRequestDto> getAllRequestDtosMadeByRequester(@RequestHeader("X-Sharer-User-Id") long userId) {
+        return itemRequestService.getAllRequestDtosMadeByRequester(userId);
     }
 
     @GetMapping("/all")
@@ -30,7 +30,7 @@ public class ItemRequestController {
             @RequestHeader("X-Sharer-User-Id") long userId,
             @RequestParam(value = "from", required = false) Integer from,
             @RequestParam(value = "size", required = false) Integer size) {
-        return itemRequestService.getPagedRequestsMadeByOtherUsers(userId, from, size);
+        return itemRequestService.getPagedRequestDtosMadeByOtherUsers(userId, from, size);
     }
 
     @GetMapping("{requestId}")

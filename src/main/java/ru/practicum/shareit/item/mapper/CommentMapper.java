@@ -17,7 +17,7 @@ public class CommentMapper {
         return new CommentDto(
                 comment.getId(),
                 comment.getText(),
-                comment.getItem(),
+                ItemMapper.mapToItemDtoForSearch(comment.getItem()),
                 comment.getAuthor().getName(),
                 comment.getCreated()
         );

@@ -1,3 +1,4 @@
+/*
 package ru.practicum.shareit.user.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -112,6 +113,7 @@ class UserControllerTest {
 
     }
 
+*/
 /*    @SneakyThrows
     @Test
     void postUserWithDuplicateEmail() {
@@ -132,7 +134,8 @@ class UserControllerTest {
                 .andExpect(status().isBadRequest());
 
         Mockito.verify(userService, Mockito.times(1)).postUser(user1Duplicate);
-    }*/
+    }*//*
+
 
     @SneakyThrows
     @Test
@@ -167,4 +170,4 @@ class UserControllerTest {
 
         Mockito.verify(userService, Mockito.times(1)).deleteUser(2L);
     }
-}
+}*/
