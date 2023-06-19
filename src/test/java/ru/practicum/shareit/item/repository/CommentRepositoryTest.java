@@ -1,4 +1,3 @@
-/*
 package ru.practicum.shareit.item.repository;
 
 import org.junit.jupiter.api.Test;
@@ -39,4 +38,4 @@ class CommentRepositoryTest {
                 commentRepository.getReferenceById(1L),
                 commentRepository.getReferenceById(2L))));
     }
-}*/
+}

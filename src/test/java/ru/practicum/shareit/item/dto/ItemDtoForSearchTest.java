@@ -8,19 +8,19 @@ import org.springframework.boot.test.json.JacksonTester;
 import org.springframework.boot.test.json.JsonContent;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.model.User;
 
 import java.util.ArrayList;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 @JsonTest
-class ItemDtoTest {
+class ItemDtoForSearchTest {
 
     @Autowired
-    JacksonTester<ItemDto> json;
+    JacksonTester<ItemDtoForSearch> json;
 
     User user1 = User.builder()
             .id(1L)
@@ -36,12 +36,12 @@ class ItemDtoTest {
             .owner(user1)
             .build();
 
-    ItemDto itemDto1 = ItemMapper.mapToItemDto(item1, null, null, new ArrayList<>());
+    ItemDtoForSearch itemDtoForSearch1 = ItemMapper.mapToItemDtoForSearch(item1);
 
     @Test
     @SneakyThrows
-    void testItemDto() {
-        JsonContent<ItemDto> result = json.write(itemDto1);
+    void testItemDtoForSearch() {
+        JsonContent<ItemDtoForSearch> result = json.write(itemDtoForSearch1);
 
         assertThat(result).extractingJsonPathNumberValue("$.id").isEqualTo(Math.toIntExact(item1.getId()));
         assertThat(result).extractingJsonPathStringValue("$.name").isEqualTo(item1.getName());

@@ -1,4 +1,3 @@
-/*
 package ru.practicum.shareit.item.dto;
 
 import lombok.SneakyThrows;
@@ -7,11 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.json.JsonTest;
 import org.springframework.boot.test.json.JacksonTester;
 import org.springframework.boot.test.json.JsonContent;
+import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
@@ -44,11 +45,14 @@ class CommentDtoTest {
                 .owner(user1)
                 .build();
 
+        ItemDtoForSearch itemDtoForSearch = ItemMapper.mapToItemDtoForSearch(item);
+
+
         LocalDateTime now = LocalDateTime.now();
 
         CommentDto commentDto = CommentDto.builder()
                 .text("this is a comment")
-                .item(item)
+                .itemDtoForSearch(itemDtoForSearch)
                 .authorName(user2.getName())
                 .created(now)
                 .build();
@@ -56,17 +60,17 @@ class CommentDtoTest {
         JsonContent<CommentDto> result = json.write(commentDto);
 
         assertThat(result).extractingJsonPathStringValue("$.text").isEqualTo("this is a comment");
-        assertThat(result).extractingJsonPathNumberValue("$.item.id")
+        assertThat(result).extractingJsonPathNumberValue("$.itemDtoForSearch.id")
                 .isEqualTo(Math.toIntExact(item.getId()));
-        assertThat(result).extractingJsonPathStringValue("$.item.name").isEqualTo("item");
-        assertThat(result).extractingJsonPathStringValue("$.item.description").isEqualTo("item description");
-        assertThat(result).extractingJsonPathNumberValue("$.item.owner.id")
+        assertThat(result).extractingJsonPathStringValue("$.itemDtoForSearch.name").isEqualTo("item");
+        assertThat(result).extractingJsonPathStringValue("$.itemDtoForSearch.description").isEqualTo("item description");
+        assertThat(result).extractingJsonPathNumberValue("$.itemDtoForSearch.owner.id")
                 .isEqualTo(Math.toIntExact(user1.getId()));
-        assertThat(result).extractingJsonPathStringValue("$.item.owner.name").isEqualTo("user1");
-        assertThat(result).extractingJsonPathStringValue("$.item.owner.email").isEqualTo("user1@user.ru");
-        assertThat(result).extractingJsonPathBooleanValue("$.item.available").isEqualTo(true);
+        assertThat(result).extractingJsonPathStringValue("$.itemDtoForSearch.owner.name").isEqualTo("user1");
+        assertThat(result).extractingJsonPathStringValue("$.itemDtoForSearch.owner.email").isEqualTo("user1@user.ru");
+        assertThat(result).extractingJsonPathBooleanValue("$.itemDtoForSearch.available").isEqualTo(true);
         assertThat(result).extractingJsonPathStringValue("$.authorName").isEqualTo("user2");
         assertThat(result).extractingJsonPathStringValue("$.created")
                 .isEqualTo(now.format(DateTimeFormatter.ofPattern("YYYY-MM-dd'T'HH:mm:ss")));
     }
-}*/
+}

@@ -1,4 +1,3 @@
-/*
 package ru.practicum.shareit.user.service;
 
 import org.junit.jupiter.api.Test;
@@ -6,6 +5,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.practicum.shareit.exception.UserDoesNotExistException;
+import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
@@ -30,32 +31,38 @@ class UserServiceImplTest {
             .email("user1@user.ru")
             .build();
 
+    UserDto userDto1 = UserMapper.mapToUserDto(user1);
+
     User user2 = User.builder()
             .id(2L)
             .name("user2")
             .email("user2@user.ru")
             .build();
 
+    UserDto userDto2 = UserMapper.mapToUserDto(user2);
+
     List<User> users = List.of(user1, user2);
+
+    List<UserDto> userDtos = UserMapper.mapToUserDto(users);
 
     @Test
     void postUser() {
-        Mockito.when(userService.postUser(user1))
+        Mockito.when(userRepository.save(user1))
                 .thenReturn(user1);
 
-        User postedUser1 = userService.postUser(user1);
-        assertEquals(user1, postedUser1, "Выгруженный из БД пользователь не совпадает с первоначальным");
+        UserDto postedUserDto1 = userService.postUserDto(userDto1);
+        assertEquals(userDto1, postedUserDto1, "Выгруженный из БД пользователь не совпадает с первоначальным");
 
         Mockito.verify(userRepository, Mockito.times(1)).save(user1);
     }
 
     @Test
     void getUsers() {
-        Mockito.when(userService.getUsers())
+        Mockito.when(userRepository.findAll())
                 .thenReturn(users);
 
-        List<User> returnedUsers = userService.getUsers();
-        assertThat(returnedUsers, equalTo(users));
+        List<UserDto> returnedUserDtos = userService.getUserDtos();
+        assertThat(returnedUserDtos, equalTo(userDtos));
 
         Mockito.verify(userRepository, Mockito.atMost(1)).findAll();
     }
@@ -65,8 +72,8 @@ class UserServiceImplTest {
         Mockito.when(userRepository.findById(1L))
                 .thenReturn(Optional.of(user1));
 
-        User returnedUser1 = userService.getUser(1L);
-        assertThat(returnedUser1, equalTo(user1));
+        UserDto returnedUserDto1 = userService.getUserDto(1L);
+        assertThat(returnedUserDto1, equalTo(userDto1));
 
         Mockito.verify(userRepository, Mockito.times(1)).findById(1L);
     }
@@ -77,7 +84,7 @@ class UserServiceImplTest {
                 .thenThrow(new UserDoesNotExistException("Пользователя с id = 100 не существует"));
 
         UserDoesNotExistException userDoesNotExistException =
-                assertThrows(UserDoesNotExistException.class, () -> userService.getUser(100L));
+                assertThrows(UserDoesNotExistException.class, () -> userService.getUserDto(100L));
         assertEquals(userDoesNotExistException.getMessage(), "Пользователя с id = 100 не существует");
 
         Mockito.verify(userRepository, Mockito.times(1)).findById(100L);
@@ -91,23 +98,23 @@ class UserServiceImplTest {
                 .email("patchedUser2@user.ru")
                 .build();
 
+        UserDto patchedUserDto2 = UserMapper.mapToUserDto(patchedUser2);
+
         Mockito.when(userRepository.findById(2L))
                 .thenReturn(Optional.of(user2));
-        Mockito.when(userService.patchUser(2L, patchedUser2))
-                .thenReturn(patchedUser2);
 
-        User returnedPatchedUser2 = userService.patchUser(2L, patchedUser2);
-        assertThat(patchedUser2, equalTo(returnedPatchedUser2));
+        UserDto returnedPatchedUserDto2 = userService.patchUserDto(2L, patchedUserDto2);
+        assertThat(patchedUserDto2, equalTo(returnedPatchedUserDto2));
         Mockito.verify(userRepository, Mockito.times(1)).save(patchedUser2);
     }
 
     @Test
     void deleteUser() {
-        userService.deleteUser(1L);
-        userService.deleteUser(2L);
+        userService.deleteUserDto(1L);
+        userService.deleteUserDto(2L);
 
         Mockito.verify(userRepository, Mockito.times(1)).deleteById(1L);
         Mockito.verify(userRepository, Mockito.times(1)).deleteById(2L);
         Mockito.verify(userRepository, Mockito.never()).deleteById(2000L);
     }
-}*/
+}

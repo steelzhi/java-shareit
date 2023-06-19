@@ -1,4 +1,3 @@
-/*
 package ru.practicum.shareit.request.dto;
 
 import lombok.SneakyThrows;
@@ -7,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.json.JsonTest;
 import org.springframework.boot.test.json.JacksonTester;
 import org.springframework.boot.test.json.JsonContent;
+import ru.practicum.shareit.item.dto.ItemDtoForSearch;
+import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.request.mapper.ItemRequestMapper;
 import ru.practicum.shareit.request.model.ItemRequest;
@@ -44,6 +45,9 @@ class ItemRequestDtoTest {
             .owner(user1)
             .build();
 
+    ItemDtoForSearch itemDtoForSearch1 = ItemMapper.mapToItemDtoForSearch(item1);
+
+
     LocalDateTime now = LocalDateTime.now();
 
     ItemRequest itemRequest = ItemRequest.builder()
@@ -53,7 +57,7 @@ class ItemRequestDtoTest {
             .created(now)
             .build();
 
-    ItemRequestDto itemRequestDto = ItemRequestMapper.mapToItemRequestDto(itemRequest, List.of(item1));
+    ItemRequestDto itemRequestDto = ItemRequestMapper.mapToItemRequestDto(itemRequest, List.of(itemDtoForSearch1));
 
     @Test
     @SneakyThrows
@@ -62,15 +66,15 @@ class ItemRequestDtoTest {
 
         assertThat(result).extractingJsonPathNumberValue("$.id")
                 .isEqualTo(Math.toIntExact(itemRequest.getId()));
-        assertThat(result).extractingJsonPathNumberValue("$.requester.id")
+        assertThat(result).extractingJsonPathNumberValue("$.requesterDto.id")
                 .isEqualTo(Math.toIntExact(itemRequest.getRequester().getId()));
-        assertThat(result).extractingJsonPathStringValue("$.requester.name")
+        assertThat(result).extractingJsonPathStringValue("$.requesterDto.name")
                 .isEqualTo(itemRequest.getRequester().getName());
-        assertThat(result).extractingJsonPathStringValue("$.requester.email")
+        assertThat(result).extractingJsonPathStringValue("$.requesterDto.email")
                 .isEqualTo(itemRequest.getRequester().getEmail());
         assertThat(result).extractingJsonPathStringValue("$.description")
                 .isEqualTo(itemRequest.getDescription());
         assertThat(result).extractingJsonPathStringValue("$.created")
                 .isEqualTo(now.format(DateTimeFormatter.ofPattern("YYYY-MM-dd'T'HH:mm:ss")));
     }
-}*/
+}

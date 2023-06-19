@@ -1,4 +1,3 @@
-/*
 package ru.practicum.shareit.booking.repository;
 
 import org.junit.jupiter.api.Test;
@@ -96,4 +95,3 @@ public class BookingJpaRepositoryTests {
                 bookingRepository.getReferenceById(5L))));
     }
 }
-*/

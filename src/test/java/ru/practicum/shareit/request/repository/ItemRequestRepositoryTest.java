@@ -1,4 +1,3 @@
-/*
 package ru.practicum.shareit.request.repository;
 
 import org.junit.jupiter.api.Test;
@@ -48,4 +47,4 @@ class ItemRequestRepositoryTest {
                 itemRequestRepository.getReferenceById(1L),
                 itemRequestRepository.getReferenceById(4L))));
     }
-}*/
+}

@@ -1,4 +1,3 @@
-/*
 package ru.practicum.shareit.item.repository;
 
 import org.junit.jupiter.api.Test;
@@ -68,4 +67,4 @@ public class ItemRepositoryTest {
 
         assertThat(itemsFoundByRequestId, equalTo(List.of(item5)));
     }
-}*/
+}

@@ -1,4 +1,3 @@
-/*
 package ru.practicum.shareit.user.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,6 +10,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.exception.UserDoesNotExistException;
+import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.service.UserService;
 
@@ -40,19 +41,25 @@ class UserControllerTest {
             .email("user1@user.ru")
             .build();
 
+    UserDto userDto1 = UserMapper.mapToUserDto(user1);
+
     User user2 = User.builder()
             .id(2L)
             .name("user2")
             .email("user2@user.ru")
             .build();
 
+    UserDto userDto2 = UserMapper.mapToUserDto(user2);
+
     List<User> users = List.of(user1, user2);
+
+    List<UserDto> userDtos = UserMapper.mapToUserDto(users);
 
     @SneakyThrows
     @Test
     void getUsers() {
-        Mockito.when(userService.getUsers())
-                .thenReturn(users);
+        Mockito.when(userService.getUserDtos())
+                .thenReturn(userDtos);
 
         mockMvc.perform(get("/users"))
                 .andExpect(status().isOk())
@@ -62,43 +69,43 @@ class UserControllerTest {
                 .andExpect(jsonPath("$[1].name", is(user2.getName())))
                 .andExpect(jsonPath("$[1].email", is(user2.getEmail())));
 
-        Mockito.verify(userService, Mockito.times(1)).getUsers();
+        Mockito.verify(userService, Mockito.times(1)).getUserDtos();
 
     }
 
     @SneakyThrows
     @Test
     void getUser() {
-        Mockito.when(userService.getUser(1L))
-                .thenReturn(user1);
+        Mockito.when(userService.getUserDto(1L))
+                .thenReturn(userDto1);
 
         mockMvc.perform(get("/users/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name", is(user1.getName())))
                 .andExpect(jsonPath("$.email", is(user1.getEmail())));
 
-        Mockito.verify(userService, Mockito.times(1)).getUser(1L);
+        Mockito.verify(userService, Mockito.times(1)).getUserDto(1L);
 
     }
 
     @SneakyThrows
     @Test
     void getUserWithIncorrectId() {
-        Mockito.when(userService.getUser(100L))
+        Mockito.when(userService.getUserDto(100L))
                 .thenThrow(new UserDoesNotExistException("Пользователя с id = 100 не существует"));
 
         mockMvc.perform(get("/users/100"))
                 .andExpect(status().isNotFound());
 
-        Mockito.verify(userService, Mockito.times(1)).getUser(100L);
+        Mockito.verify(userService, Mockito.times(1)).getUserDto(100L);
 
     }
 
     @SneakyThrows
     @Test
     void postUser() {
-        Mockito.when(userService.postUser(user1))
-                .thenReturn(user1);
+        Mockito.when(userService.postUserDto(userDto1))
+                .thenReturn(userDto1);
 
         mockMvc.perform(post("/users")
                         .content(objectMapper.writeValueAsBytes(user1))
@@ -109,33 +116,9 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.name", is(user1.getName())))
                 .andExpect(jsonPath("$.email", is(user1.getEmail())));
 
-        Mockito.verify(userService, Mockito.times(1)).postUser(user1);
+        Mockito.verify(userService, Mockito.times(1)).postUserDto(userDto1);
 
     }
-
-*/
-/*    @SneakyThrows
-    @Test
-    void postUserWithDuplicateEmail() {
-        User user1Duplicate = User.builder()
-                .id(3L)
-                .name("user1")
-                .email("user1@user.ru")
-                .build();
-
-        Mockito.when(userService.postUser(user1Duplicate))
-                .thenThrow(new DuplicateStatusException("Пользователь с таким email уже существует"));
-
-        mockMvc.perform(post("/users")
-                        .content(objectMapper.writeValueAsBytes(user1Duplicate))
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-
-        Mockito.verify(userService, Mockito.times(1)).postUser(user1Duplicate);
-    }*//*
-
 
     @SneakyThrows
     @Test
@@ -146,19 +129,22 @@ class UserControllerTest {
                 .email("patchedUser2@user.ru")
                 .build();
 
-        Mockito.when(userService.patchUser(2L, patchedUser2))
-                .thenReturn(patchedUser2);
+        UserDto patchedUserDto2 = UserMapper.mapToUserDto(patchedUser2);
+
+
+        Mockito.when(userService.patchUserDto(2L, patchedUserDto2))
+                .thenReturn(patchedUserDto2);
 
         mockMvc.perform(patch("/users/2")
-                        .content(objectMapper.writeValueAsBytes(patchedUser2))
+                        .content(objectMapper.writeValueAsBytes(patchedUserDto2))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name", is(patchedUser2.getName())))
-                .andExpect(jsonPath("$.email", is(patchedUser2.getEmail())));
+                .andExpect(jsonPath("$.name", is(patchedUserDto2.getName())))
+                .andExpect(jsonPath("$.email", is(patchedUserDto2.getEmail())));
 
-        Mockito.verify(userService, Mockito.times(1)).patchUser(2L, patchedUser2);
+        Mockito.verify(userService, Mockito.times(1)).patchUserDto(2L, patchedUserDto2);
 
     }
 
@@ -168,6 +154,6 @@ class UserControllerTest {
         mockMvc.perform(delete("/users/2"))
                 .andExpect(status().isOk());
 
-        Mockito.verify(userService, Mockito.times(1)).deleteUser(2L);
+        Mockito.verify(userService, Mockito.times(1)).deleteUserDto(2L);
     }
-}*/
+}
