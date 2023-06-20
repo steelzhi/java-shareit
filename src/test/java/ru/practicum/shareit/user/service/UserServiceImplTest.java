@@ -39,8 +39,6 @@ class UserServiceImplTest {
             .email("user2@user.ru")
             .build();
 
-    UserDto userDto2 = UserMapper.mapToUserDto(user2);
-
     List<User> users = List.of(user1, user2);
 
     List<UserDto> userDtos = UserMapper.mapToUserDto(users);

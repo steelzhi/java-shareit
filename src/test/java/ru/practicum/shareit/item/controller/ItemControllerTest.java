@@ -1,4 +1,3 @@
-/*
 package ru.practicum.shareit.item.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,7 +13,9 @@ import ru.practicum.shareit.exception.EmptyCommentException;
 import ru.practicum.shareit.exception.ItemDoesNotExistException;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemDtoForSearch;
 import ru.practicum.shareit.item.mapper.CommentMapper;
+import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.service.ItemService;
@@ -79,21 +80,11 @@ class ItemControllerTest {
             .owner(user1)
             .build();
 
-    ItemDto itemDto1 = ItemDto.builder()
-            .id(item1.getId())
-            .name(item1.getName())
-            .description(item1.getDescription())
-            .owner(item1.getOwner())
-            .requestId(item1.getRequestId())
-            .build();
+    ItemDto itemDto1 = ItemMapper.mapToItemDto(item1, null, null, null);
 
-    ItemDto itemDto3 = ItemDto.builder()
-            .id(item3.getId())
-            .name(item3.getName())
-            .description(item3.getDescription())
-            .owner(item3.getOwner())
-            .requestId(item3.getRequestId())
-            .build();
+    ItemDtoForSearch itemDtoForSearch = ItemMapper.mapToItemDtoForSearch(item2);
+
+    ItemDto itemDto3 = ItemMapper.mapToItemDto(item3, null, null, null);
 
     LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
 
@@ -110,12 +101,12 @@ class ItemControllerTest {
     @SneakyThrows
     @Test
     void postItem() {
-        Mockito.when(itemService.postItem(item1, user1.getId()))
-                .thenReturn(item1);
+        Mockito.when(itemService.postItemDto(itemDto1, user1.getId()))
+                .thenReturn(itemDto1);
 
         mockMvc.perform(post("/items")
                         .header("X-Sharer-User-Id", 1L)
-                        .content(objectMapper.writeValueAsBytes(item1))
+                        .content(objectMapper.writeValueAsBytes(itemDto1))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -128,7 +119,7 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$.owner.name", is(item1.getOwner().getName())))
                 .andExpect(jsonPath("$.owner.email", is(item1.getOwner().getEmail())));
 
-        Mockito.verify(itemService, Mockito.times(1)).postItem(item1, user1.getId());
+        Mockito.verify(itemService, Mockito.times(1)).postItemDto(itemDto1, user1.getId());
     }
 
     @SneakyThrows
@@ -142,12 +133,14 @@ class ItemControllerTest {
                 .owner(item2.getOwner())
                 .build();
 
-        Mockito.when(itemService.patchItem(2L, patchedItem, 2L))
-                .thenReturn(patchedItem);
+        ItemDto patchedItemDto = ItemMapper.mapToItemDto(patchedItem, null, null, null);
+
+        Mockito.when(itemService.patchItemDto(2L, patchedItemDto, 2L))
+                .thenReturn(patchedItemDto);
 
         mockMvc.perform(patch("/items/{itemId}", 2L)
                         .header("X-Sharer-User-Id", 2L)
-                        .content(objectMapper.writeValueAsBytes(patchedItem))
+                        .content(objectMapper.writeValueAsBytes(patchedItemDto))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -160,7 +153,7 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$.owner.name", is(patchedItem.getOwner().getName())))
                 .andExpect(jsonPath("$.owner.email", is(patchedItem.getOwner().getEmail())));
 
-        Mockito.verify(itemService, Mockito.times(1)).patchItem(2L, patchedItem, 2L);
+        Mockito.verify(itemService, Mockito.times(1)).patchItemDto(2L, patchedItemDto, 2L);
     }
 
     @SneakyThrows
@@ -233,8 +226,8 @@ class ItemControllerTest {
     @SneakyThrows
     @Test
     void searchItems() {
-        Mockito.when(itemService.searchItems("нист", null, null))
-                .thenReturn(List.of(item2));
+        Mockito.when(itemService.searchItemDto("нист", null, null))
+                .thenReturn(List.of(itemDtoForSearch));
 
         mockMvc.perform(get("/items/search")
                         .header("X-Sharer-User-Id", 1L)
@@ -251,40 +244,40 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$[0].owner.email", is(item2.getOwner().getEmail())));
 
         Mockito.verify(itemService, Mockito.times(1))
-                .searchItems("нист", null, null);
+                .searchItemDto("нист", null, null);
     }
 
     @SneakyThrows
     @Test
     void postComment() {
-        Mockito.when(itemService.postComment(1L, comment, 2L))
+        Mockito.when(itemService.postCommentDto(1L, commentDto, 2L))
                 .thenReturn(commentDto);
 
         mockMvc.perform(post("/items/{itemId}/comment", 1L)
                         .header("X-Sharer-User-Id", 2L)
-                        .content(objectMapper.writeValueAsBytes(comment))
+                        .content(objectMapper.writeValueAsBytes(commentDto))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(comment.getId()), Long.class))
                 .andExpect(jsonPath("$.text", is(comment.getText())))
-                .andExpect(jsonPath("$.item.id", is(comment.getItem().getId()), Long.class))
-                .andExpect(jsonPath("$.item.name", is(comment.getItem().getName())))
-                .andExpect(jsonPath("$.item.description", is(comment.getItem().getDescription())))
-                .andExpect(jsonPath("$.item.available", is(comment.getItem().getAvailable())))
-                .andExpect(jsonPath("$.item.owner.id", is(comment.getItem().getOwner().getId()), Long.class))
-                .andExpect(jsonPath("$.item.owner.name", is(comment.getItem().getOwner().getName())))
-                .andExpect(jsonPath("$.item.owner.email", is(comment.getItem().getOwner().getEmail())))
+                .andExpect(jsonPath("$.itemDtoForSearch.id", is(comment.getItem().getId()), Long.class))
+                .andExpect(jsonPath("$.itemDtoForSearch.name", is(comment.getItem().getName())))
+                .andExpect(jsonPath("$.itemDtoForSearch.description", is(comment.getItem().getDescription())))
+                .andExpect(jsonPath("$.itemDtoForSearch.available", is(comment.getItem().getAvailable())))
+                .andExpect(jsonPath("$.itemDtoForSearch.owner.id", is(comment.getItem().getOwner().getId()), Long.class))
+                .andExpect(jsonPath("$.itemDtoForSearch.owner.name", is(comment.getItem().getOwner().getName())))
+                .andExpect(jsonPath("$.itemDtoForSearch.owner.email", is(comment.getItem().getOwner().getEmail())))
                 .andExpect(jsonPath("$.authorName", is(comment.getAuthor().getName())));
 
-        Mockito.verify(itemService, Mockito.times(1)).postComment(1L, comment, 2L);
+        Mockito.verify(itemService, Mockito.times(1)).postCommentDto(1L, commentDto, 2L);
     }
 
     @SneakyThrows
     @Test
     void postEmptyComment() {
-        Mockito.when(itemService.postComment(1L, null, 2L))
+        Mockito.when(itemService.postCommentDto(1L, null, 2L))
                 .thenThrow(new EmptyCommentException("Комментарий не может быть пустым"));
 
         mockMvc.perform(post("/items/{itemId}/comment", 1L)
@@ -295,6 +288,6 @@ class ItemControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
-        Mockito.verify(itemService, Mockito.never()).postComment(1L, null, 2L);
+        Mockito.verify(itemService, Mockito.never()).postCommentDto(1L, null, 2L);
     }
-}*/
+}

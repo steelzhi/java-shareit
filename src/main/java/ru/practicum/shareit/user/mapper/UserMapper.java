@@ -12,33 +12,45 @@ public class UserMapper {
     }
 
     public static UserDto mapToUserDto(User user) {
-        return new UserDto(
-                user.getId(),
-                user.getName(),
-                user.getEmail()
-        );
+        UserDto userDto = null;
+        if (user != null) {
+            userDto = new UserDto(
+                    user.getId(),
+                    user.getName(),
+                    user.getEmail()
+            );
+        }
+        return userDto;
     }
 
     public static User mapToUser(UserDto userDto) {
-        return new User(
-                userDto.getId(),
-                userDto.getName(),
-                userDto.getEmail()
-        );
+        User user = null;
+        if (userDto != null) {
+            user = new User(
+                    userDto.getId(),
+                    userDto.getName(),
+                    userDto.getEmail()
+            );
+        }
+        return user;
     }
 
     public static List<UserDto> mapToUserDto(List<User> users) {
         List<UserDto> userDtos = new ArrayList<>();
-        for (User user : users) {
-            userDtos.add(mapToUserDto(user));
+        if (users != null) {
+            for (User user : users) {
+                userDtos.add(mapToUserDto(user));
+            }
         }
         return userDtos;
     }
 
     public static List<User> mapToUser(List<UserDto> userDtos) {
         List<User> users = new ArrayList<>();
-        for (UserDto userDto : userDtos) {
-            users.add(mapToUser(userDto));
+        if (userDtos != null) {
+            for (UserDto userDto : userDtos) {
+                users.add(mapToUser(userDto));
+            }
         }
         return users;
     }

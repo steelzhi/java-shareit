@@ -1,4 +1,3 @@
-/*
 package ru.practicum.shareit.booking.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,7 +9,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import ru.practicum.shareit.booking.dto.BookingDto;
+import ru.practicum.shareit.booking.dto.BookingDtoIn;
+import ru.practicum.shareit.booking.dto.BookingDtoOutForController;
+import ru.practicum.shareit.booking.dto.BookingDtoOutForItemDto;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.service.BookingService;
@@ -66,35 +67,28 @@ class BookingControllerTest {
 
     LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
 
-    Booking booking1 = Booking.builder()
+    BookingDtoIn bookingDtoIn1 = BookingDtoIn.builder()
             .id(1L)
-            .item(item1)
-            .booker(user2)
             .start(now.plusHours(1L))
             .end(now.plusDays(1L))
+            .itemId(1L)
+            .bookerId(2L)
             .status(BookingStatus.WAITING)
             .build();
 
-    Booking booking2 = Booking.builder()
-            .id(2L)
-            .item(item1)
-            .booker(user2)
-            .start(now.plusDays(2L))
-            .end(now.plusDays(3L))
-            .status(BookingStatus.WAITING)
-            .build();
+    Booking booking1 = BookingMapper.mapToBooking(bookingDtoIn1, item1, user2);
 
-    BookingDto bookingDto = BookingMapper.mapToBookingDto(booking1);
+    BookingDtoOutForController bookingDtoOutForController1 = BookingMapper.mapToBookingDtoOutForController(booking1);
 
     @SneakyThrows
     @Test
     void createBooking() {
-        Mockito.when(bookingService.createBooking(bookingDto, 1L))
-                .thenReturn(booking1);
+        Mockito.when(bookingService.createBookingDto(bookingDtoIn1, 1L))
+                .thenReturn(bookingDtoOutForController1);
 
         mockMvc.perform(post("/bookings")
                         .header("X-Sharer-User-Id", 1L)
-                        .content(objectMapper.writeValueAsBytes(bookingDto))
+                        .content(objectMapper.writeValueAsBytes(bookingDtoIn1))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -111,45 +105,49 @@ class BookingControllerTest {
                 .andExpect(jsonPath("$.end", is(now.plusDays(1L).toString())))
                 .andExpect(jsonPath("$.status", is(booking1.getStatus().name())));
 
-        Mockito.verify(bookingService, Mockito.times(1)).createBooking(bookingDto, 1L);
+        Mockito.verify(bookingService, Mockito.times(1)).createBookingDto(bookingDtoIn1, 1L);
     }
 
     @SneakyThrows
     @Test
     void createBookingByItemOwner() {
-        Mockito.when(bookingService.createBooking(bookingDto, 2L))
+        Mockito.when(bookingService.createBookingDto(bookingDtoIn1, 2L))
                 .thenThrow(new IllegalBookingAttemptException("Владелец вещи не может бронировать свою вещь"));
 
         mockMvc.perform(post("/bookings")
                         .header("X-Sharer-User-Id", 2L)
-                        .content(objectMapper.writeValueAsBytes(bookingDto))
+                        .content(objectMapper.writeValueAsBytes(bookingDtoIn1))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
 
-        Mockito.verify(bookingService, Mockito.times(1)).createBooking(bookingDto, 2L);
+        Mockito.verify(bookingService, Mockito.times(1)).createBookingDto(bookingDtoIn1, 2L);
     }
 
     @SneakyThrows
     @Test
     void patchBookingWithUpdatedStatus() {
-        Booking updatedBooking = Booking.builder()
+        BookingDtoIn updatedBookingDtoIn = BookingDtoIn.builder()
                 .id(booking1.getId())
-                .item(booking1.getItem())
-                .booker(booking1.getBooker())
+                .itemId(booking1.getItem().getId())
+                .bookerId(booking1.getBooker().getId())
                 .start(booking1.getStart())
                 .end(booking1.getEnd())
                 .status(BookingStatus.APPROVED)
                 .build();
 
-        Mockito.when(bookingService.patchBookingWithUpdatedStatus(1L, 1L, true))
-                .thenReturn(updatedBooking);
+        Booking updatedBooking = BookingMapper.mapToBooking(updatedBookingDtoIn, booking1.getItem(), booking1.getBooker());
+
+        BookingDtoOutForController bookingDtoOutForController = BookingMapper.mapToBookingDtoOutForController(updatedBooking);
+
+        Mockito.when(bookingService.patchBookingDtoWithUpdatedStatus(1L, 1L, true))
+                .thenReturn(bookingDtoOutForController);
 
         mockMvc.perform(patch("/bookings/{bookingId}", booking1.getId())
                         .header("X-Sharer-User-Id", 1L)
                         .param("approved", "true")
-                        .content(objectMapper.writeValueAsBytes(bookingDto))
+                        .content(objectMapper.writeValueAsBytes(updatedBookingDtoIn))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -167,51 +165,51 @@ class BookingControllerTest {
                 .andExpect(jsonPath("$.status", is(BookingStatus.APPROVED.name())));
 
         Mockito.verify(bookingService, Mockito.times(1))
-                .patchBookingWithUpdatedStatus(1L, 1L, true);
+                .patchBookingDtoWithUpdatedStatus(1L, 1L, true);
     }
 
     @SneakyThrows
     @Test
     void patchBookingWithDuplicateStatus() {
-        Booking booking = Booking.builder()
+        booking1.setStatus(BookingStatus.APPROVED);
+
+        BookingDtoIn updatedBookingDtoIn = BookingDtoIn.builder()
                 .id(booking1.getId())
-                .item(booking1.getItem())
-                .booker(booking1.getBooker())
+                .itemId(booking1.getItem().getId())
+                .bookerId(booking1.getBooker().getId())
                 .start(booking1.getStart())
                 .end(booking1.getEnd())
                 .status(BookingStatus.APPROVED)
                 .build();
 
-        Booking updatedBooking = Booking.builder()
-                .id(booking1.getId())
-                .item(booking1.getItem())
-                .booker(booking1.getBooker())
-                .start(booking1.getStart())
-                .end(booking1.getEnd())
-                .status(BookingStatus.APPROVED)
-                .build();
+        Booking updatedBooking = BookingMapper.mapToBooking(updatedBookingDtoIn, booking1.getItem(), booking1.getBooker());
 
-        Mockito.when(bookingService.patchBookingWithUpdatedStatus(1L, 1L, true))
+        BookingDtoOutForController bookingDtoOutForController = BookingMapper.mapToBookingDtoOutForController(updatedBooking);
+
+        Mockito.when(bookingService.patchBookingDtoWithUpdatedStatus(1L, 1L, true))
+                .thenReturn(bookingDtoOutForController);
+
+        Mockito.when(bookingService.patchBookingDtoWithUpdatedStatus(1L, 1L, true))
                 .thenThrow(new DuplicateStatusException("Данный статус уже установлен"));
 
         mockMvc.perform(patch("/bookings/{bookingId}", booking1.getId())
                         .header("X-Sharer-User-Id", 1L)
                         .param("approved", "true")
-                        .content(objectMapper.writeValueAsBytes(bookingDto))
+                        .content(objectMapper.writeValueAsBytes(updatedBookingDtoIn))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
         Mockito.verify(bookingService, Mockito.times(1))
-                .patchBookingWithUpdatedStatus(1L, 1L, true);
+                .patchBookingDtoWithUpdatedStatus(1L, 1L, true);
     }
 
     @SneakyThrows
     @Test
     void getBooking() {
-        Mockito.when(bookingService.getBooking(1L, 2L))
-                .thenReturn(booking1);
+        Mockito.when(bookingService.getBookingDto(1L, 2L))
+                .thenReturn(bookingDtoOutForController1);
 
         mockMvc.perform(get("/bookings/1")
                         .header("X-Sharer-User-Id", 2L))
@@ -228,27 +226,39 @@ class BookingControllerTest {
                 .andExpect(jsonPath("$.end", is(now.plusDays(1L).toString())))
                 .andExpect(jsonPath("$.status", is(booking1.getStatus().name())));
 
-        Mockito.verify(bookingService, Mockito.times(1)).getBooking(1L, 2L);
+        Mockito.verify(bookingService, Mockito.times(1)).getBookingDto(1L, 2L);
     }
 
     @SneakyThrows
     @Test
     void getNotExistingBooking() {
-        Mockito.when(bookingService.getBooking(100L, 2L))
+        Mockito.when(bookingService.getBookingDto(100L, 2L))
                 .thenThrow(new BookingDoesNotExistException("Бронирование не найдено"));
 
         mockMvc.perform(get("/bookings/100")
                         .header("X-Sharer-User-Id", 2L))
                 .andExpect(status().isNotFound());
 
-        Mockito.verify(bookingService, Mockito.times(1)).getBooking(100L, 2L);
+        Mockito.verify(bookingService, Mockito.times(1)).getBookingDto(100L, 2L);
     }
 
     @SneakyThrows
     @Test
     void getAllBookingsByUser() {
-        Mockito.when(bookingService.getAllBookingsByUser(2L, "WAITING", null, null))
-                .thenReturn(List.of(booking1, booking2));
+        BookingDtoIn bookingDtoIn2 = BookingDtoIn.builder()
+                .id(2L)
+                .start(now.plusDays(2L))
+                .end(now.plusDays(3L))
+                .itemId(1L)
+                .bookerId(2L)
+                .status(BookingStatus.WAITING)
+                .build();
+
+        Booking booking2 = BookingMapper.mapToBooking(bookingDtoIn2, item1, user2);
+
+        BookingDtoOutForController bookingDtoOutForController2 = BookingMapper.mapToBookingDtoOutForController(booking2);
+        Mockito.when(bookingService.getAllBookingDtosByUser(2L, "WAITING", null, null))
+                .thenReturn(List.of(bookingDtoOutForController1, bookingDtoOutForController2));
 
         mockMvc.perform(get("/bookings")
                         .header("X-Sharer-User-Id", 2L)
@@ -280,13 +290,13 @@ class BookingControllerTest {
                 .andExpect(jsonPath("$[1].status", is(booking2.getStatus().name())));
 
         Mockito.verify(bookingService, Mockito.times(1))
-                .getAllBookingsByUser(2L, "WAITING", null, null);
+                .getAllBookingDtosByUser(2L, "WAITING", null, null);
     }
 
     @SneakyThrows
     @Test
     void getAllBookingsByUserWithUnsupportedStatus() {
-        Mockito.when(bookingService.getAllBookingsByUser(2L, "UNSUPPORTED", null, null))
+        Mockito.when(bookingService.getAllBookingDtosByUser(2L, "UNSUPPORTED", null, null))
                 .thenThrow(new WrongBookingStatusException("Unknown state: UNSUPPORTED_STATUS"));
 
         mockMvc.perform(get("/bookings")
@@ -295,14 +305,27 @@ class BookingControllerTest {
                 .andExpect(status().isBadRequest());
 
         Mockito.verify(bookingService, Mockito.times(1))
-                .getAllBookingsByUser(2L, "UNSUPPORTED", null, null);
+                .getAllBookingDtosByUser(2L, "UNSUPPORTED", null, null);
     }
 
     @SneakyThrows
     @Test
     void getAllBookingsForUserItems() {
-        Mockito.when(bookingService.getAllBookingsForUserItems(1L, "WAITING", 0, 5))
-                .thenReturn(List.of(booking1, booking2));
+        BookingDtoIn bookingDtoIn2 = BookingDtoIn.builder()
+                .id(2L)
+                .start(now.plusDays(2L))
+                .end(now.plusDays(3L))
+                .itemId(1L)
+                .bookerId(2L)
+                .status(BookingStatus.WAITING)
+                .build();
+
+        Booking booking2 = BookingMapper.mapToBooking(bookingDtoIn2, item1, user2);
+
+        BookingDtoOutForController bookingDtoOutForController2 = BookingMapper.mapToBookingDtoOutForController(booking2);
+
+        Mockito.when(bookingService.getAllBookingDtosForUserItems(1L, "WAITING", 0, 5))
+                .thenReturn(List.of(bookingDtoOutForController1, bookingDtoOutForController2));
 
         mockMvc.perform(get("/bookings/owner")
                         .header("X-Sharer-User-Id", 1L)
@@ -335,4 +358,4 @@ class BookingControllerTest {
                 .andExpect(jsonPath("$[1].end", is(now.plusDays(3L).toString())))
                 .andExpect(jsonPath("$[1].status", is(booking2.getStatus().name())));
     }
-}*/
+}

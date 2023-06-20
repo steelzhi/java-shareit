@@ -51,16 +51,11 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     public List<ItemRequestDto> getAllRequestDtosMadeByRequester(long userId) {
         checkAndGetUserIfExists(userId);
         List<ItemRequest> requestersRequests = itemRequestRepository.findAllByRequester_Id(userId);
-/*        List<ItemRequestDto> itemRequestDtos = getItemRequestDtos(requestersRequests);
-        for (ItemRequestDto itemRequestDto : itemRequestDtos) {
-            itemRequestDtos
-        }*/
         List<ItemRequestDto> itemRequestDtos = new ArrayList<>();
         for (ItemRequest itemRequest : requestersRequests) {
             itemRequestDtos.add(ItemRequestMapper.mapToItemRequestDto(itemRequest, getAllProposedItemsForRequest(itemRequest.getId())));
         }
 
-        //ItemRequestMapper.mapToItemRequestDto(itemRequest, getAllProposedItemsForRequest(requestId));
         return itemRequestDtos;
     }
 

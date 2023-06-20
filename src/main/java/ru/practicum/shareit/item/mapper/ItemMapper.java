@@ -10,7 +10,6 @@ import ru.practicum.shareit.user.mapper.UserMapper;
 
 import java.util.List;
 
-@Component
 public class ItemMapper {
 
     private ItemMapper() {
@@ -18,38 +17,50 @@ public class ItemMapper {
 
     public static ItemDto mapToItemDto(
             Item item, BookingDtoOutForItemDto lastBookingDto, BookingDtoOutForItemDto nextBookingDto, List<Comment> comments) {
-        return new ItemDto(
-                item.getId(),
-                item.getName(),
-                item.getDescription(),
-                item.getAvailable(),
-                UserMapper.mapToUserDto(item.getOwner()),
-                item.getRequestId(),
-                lastBookingDto,
-                nextBookingDto,
-                CommentMapper.mapToCommentDto(comments)
-        );
+        ItemDto itemDto = null;
+        if (item != null) {
+            itemDto = new ItemDto(
+                    item.getId(),
+                    item.getName(),
+                    item.getDescription(),
+                    item.getAvailable(),
+                    UserMapper.mapToUserDto(item.getOwner()),
+                    item.getRequestId(),
+                    lastBookingDto,
+                    nextBookingDto,
+                    CommentMapper.mapToCommentDto(comments)
+            );
+        }
+        return itemDto;
     }
 
     public static ItemDtoForSearch mapToItemDtoForSearch(Item item) {
-        return new ItemDtoForSearch(
-                item.getId(),
-                item.getName(),
-                item.getDescription(),
-                item.getAvailable(),
-                UserMapper.mapToUserDto(item.getOwner()),
-                item.getRequestId()
-        );
+        ItemDtoForSearch itemDtoForSearch = null;
+        if (item != null) {
+            itemDtoForSearch = new ItemDtoForSearch(
+                    item.getId(),
+                    item.getName(),
+                    item.getDescription(),
+                    item.getAvailable(),
+                    UserMapper.mapToUserDto(item.getOwner()),
+                    item.getRequestId()
+            );
+        }
+        return itemDtoForSearch;
     }
 
     public static Item mapToItem(ItemDto itemDto) {
-        Long id = itemDto.getId() != null ? itemDto.getId() : null;
-        return new Item(
-                id,
-                itemDto.getName(),
-                itemDto.getDescription(),
-                itemDto.getAvailable(),
-                UserMapper.mapToUser(itemDto.getOwner()),
-                null);
+        Item item = null;
+        if (itemDto != null) {
+            Long id = itemDto.getId() != null ? itemDto.getId() : null;
+            item = new Item(
+                    id,
+                    itemDto.getName(),
+                    itemDto.getDescription(),
+                    itemDto.getAvailable(),
+                    UserMapper.mapToUser(itemDto.getOwner()),
+                    null);
+        }
+        return item;
     }
 }

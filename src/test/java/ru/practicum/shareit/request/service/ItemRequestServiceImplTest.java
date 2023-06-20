@@ -1,4 +1,3 @@
-/*
 package ru.practicum.shareit.request.service;
 
 import org.junit.jupiter.api.Test;
@@ -10,12 +9,16 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import ru.practicum.shareit.exception.UserDoesNotExistException;
+import ru.practicum.shareit.item.dto.ItemDtoForSearch;
+import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.request.mapper.ItemRequestMapper;
 import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.request.repository.ItemRequestRepository;
+import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
@@ -60,6 +63,8 @@ class ItemRequestServiceImplTest {
             .owner(user1)
             .build();
 
+    ItemDtoForSearch itemDtoForSearch1 = ItemMapper.mapToItemDtoForSearch(item1);
+
     LocalDateTime now = LocalDateTime.now();
 
     ItemRequest itemRequest = ItemRequest.builder()
@@ -69,17 +74,19 @@ class ItemRequestServiceImplTest {
             .created(now)
             .build();
 
-    ItemRequestDto itemRequestDto = ItemRequestMapper.mapToItemRequestDto(itemRequest, List.of(item1));
+    ItemRequestDto itemRequestDto = ItemRequestMapper.mapToItemRequestDto(itemRequest, List.of(itemDtoForSearch1));
 
     @Test
     void postItemRequest() {
         Mockito.when(userRepository.findById(user2.getId()))
                 .thenReturn(Optional.of(user2));
-        Mockito.when(itemRequestService.postItemRequest(2L, itemRequest))
+        itemRequest.setRequester(userRepository.findById(user2.getId()).get());
+        Mockito.when(itemRequestRepository.save(itemRequest))
                 .thenReturn(itemRequest);
 
-        ItemRequest postedItemRequest = itemRequestRepository.save(itemRequest);
-        assertThat(itemRequest, equalTo(postedItemRequest));
+        ItemRequestDto savedItemRequestDto = ItemRequestMapper.mapToItemRequestDto(itemRequestRepository.save(itemRequest), List.of(itemDtoForSearch1));
+        savedItemRequestDto.setCreated(itemRequestDto.getCreated());
+        assertThat(itemRequestDto, equalTo(savedItemRequestDto));
 
         Mockito.verify(userRepository, Mockito.times(1)).findById(user2.getId());
         Mockito.verify(itemRequestRepository, Mockito.times(1)).save(itemRequest);
@@ -91,7 +98,7 @@ class ItemRequestServiceImplTest {
                 .thenThrow(new UserDoesNotExistException("Пользователя с таким id не существует"));
 
         UserDoesNotExistException userDoesNotExistException = assertThrows(UserDoesNotExistException.class,
-                () -> itemRequestService.postItemRequest(100L, itemRequest));
+                () -> itemRequestService.postItemRequestDto(100L, itemRequestDto));
         assertThat(userDoesNotExistException.getMessage(), equalTo("Пользователя с таким id не существует"));
 
         Mockito.verify(userRepository, Mockito.times(1)).findById(100L);
@@ -108,7 +115,7 @@ class ItemRequestServiceImplTest {
                 .thenReturn(List.of(item1));
 
         List<ItemRequestDto> allItemRequestsByRequesterId2 =
-                itemRequestService.getAllRequestsMadeByRequester(user2.getId());
+                itemRequestService.getAllRequestDtosMadeByRequester(user2.getId());
         assertThat(allItemRequestsByRequesterId2, equalTo(List.of(itemRequestDto)));
 
         Mockito.verify(userRepository, Mockito.times(1)).findById(user2.getId());
@@ -126,12 +133,16 @@ class ItemRequestServiceImplTest {
                 .thenReturn(List.of(item1));
 
         List<ItemRequestDto> itemRequestDtos =
-                itemRequestService.getPagedRequestsMadeByOtherUsers(2L, 0, 2);
+                itemRequestService.getPagedRequestDtosMadeByOtherUsers(2L, 0, 2);
 
         List<ItemRequestDto> mappedItemRequestDtos = new ArrayList<>();
         for (ItemRequest itemRequest : pagedList.getContent()) {
             List<Item> proposedItems = itemRepository.findAllByRequestId(itemRequest.getId());
-            ItemRequestDto itemRequestDto = ItemRequestMapper.mapToItemRequestDto(itemRequest, proposedItems);
+            List<ItemDtoForSearch> itemDtoForSearches = new ArrayList<>();
+            for (Item item : proposedItems) {
+                itemDtoForSearches.add(ItemMapper.mapToItemDtoForSearch(item));
+            }
+            ItemRequestDto itemRequestDto = ItemRequestMapper.mapToItemRequestDto(itemRequest, itemDtoForSearches);
             mappedItemRequestDtos.add(itemRequestDto);
         }
 
@@ -150,10 +161,10 @@ class ItemRequestServiceImplTest {
                 .thenReturn(List.of(item1));
 
         List<ItemRequestDto> itemRequestDtos =
-                itemRequestService.getPagedRequestsMadeByOtherUsers(2L, null, null);
+                itemRequestService.getPagedRequestDtosMadeByOtherUsers(2L, null, null);
 
         assertThat(itemRequestDtos,
-                equalTo(List.of(ItemRequestMapper.mapToItemRequestDto(itemRequest, List.of(item1)))));
+                equalTo(List.of(ItemRequestMapper.mapToItemRequestDto(itemRequest, List.of(ItemMapper.mapToItemDtoForSearch(item1))))));
 
         Mockito.verify(itemRequestRepository, Mockito.times(1))
                 .findAllByRequester_IdNot(2L);
@@ -172,7 +183,7 @@ class ItemRequestServiceImplTest {
         ItemRequestDto retrievedItemRequestDto = itemRequestService.getRequestDto(2L, 1L);
 
         assertThat(retrievedItemRequestDto,
-                equalTo(ItemRequestMapper.mapToItemRequestDto(itemRequest, List.of(item1))));
+                equalTo(ItemRequestMapper.mapToItemRequestDto(itemRequest, List.of(ItemMapper.mapToItemDtoForSearch(item1)))));
 
         Mockito.verify(itemRequestRepository, Mockito.times(1)).findById(1L);
     }
@@ -183,4 +194,4 @@ class ItemRequestServiceImplTest {
         }
         return null;
     }
-}*/
+}

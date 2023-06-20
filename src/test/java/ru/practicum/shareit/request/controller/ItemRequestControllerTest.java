@@ -1,4 +1,3 @@
-/*
 package ru.practicum.shareit.request.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,6 +11,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.exception.EmptyDescriptionException;
 import ru.practicum.shareit.exception.RequestDoesNotExistException;
+import ru.practicum.shareit.item.dto.ItemDtoForSearch;
+import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.request.mapper.ItemRequestMapper;
@@ -64,6 +65,8 @@ class ItemRequestControllerTest {
             .owner(user1)
             .build();
 
+    ItemDtoForSearch itemDtoForSearch1 = ItemMapper.mapToItemDtoForSearch(item1);
+
     LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
 
     ItemRequest itemRequest = ItemRequest.builder()
@@ -73,7 +76,7 @@ class ItemRequestControllerTest {
             .created(now)
             .build();
 
-    ItemRequestDto itemRequestDto = ItemRequestMapper.mapToItemRequestDto(itemRequest, List.of(item1));
+    ItemRequestDto itemRequestDto = ItemRequestMapper.mapToItemRequestDto(itemRequest, List.of(itemDtoForSearch1));
 
     @SneakyThrows
     @Test
@@ -82,25 +85,26 @@ class ItemRequestControllerTest {
                 .id(1L)
                 .description("Хотел бы воспользоваться УШМ")
                 .build();
-        Mockito.when(itemRequestService.postItemRequest(2L, itemRequestOnlyWithDescription))
-                .thenReturn(itemRequest);
+        ItemRequestDto itemRequestDtoOnlyWithDescription = ItemRequestMapper.mapToItemRequestDto(itemRequestOnlyWithDescription, new ArrayList<>());
+        Mockito.when(itemRequestService.postItemRequestDto(2L, itemRequestDtoOnlyWithDescription))
+                .thenReturn(itemRequestDto);
 
         mockMvc.perform(post("/requests")
                         .header("X-Sharer-User-Id", 2L)
-                        .content(objectMapper.writeValueAsBytes(itemRequestOnlyWithDescription))
+                        .content(objectMapper.writeValueAsBytes(itemRequestDtoOnlyWithDescription))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(itemRequest.getId()), Long.class))
-                .andExpect(jsonPath("$.requester.id", is(itemRequest.getRequester().getId()), Long.class))
-                .andExpect(jsonPath("$.requester.name", is(itemRequest.getRequester().getName())))
-                .andExpect(jsonPath("$.requester.email", is(itemRequest.getRequester().getEmail())))
+                .andExpect(jsonPath("$.requesterDto.id", is(itemRequest.getRequester().getId()), Long.class))
+                .andExpect(jsonPath("$.requesterDto.name", is(itemRequest.getRequester().getName())))
+                .andExpect(jsonPath("$.requesterDto.email", is(itemRequest.getRequester().getEmail())))
                 .andExpect(jsonPath("$.description", is(itemRequest.getDescription())))
                 .andExpect(jsonPath("$.created", is(now.toString())));
 
         Mockito.verify(itemRequestService, Mockito.times(1))
-                .postItemRequest(2L, itemRequestOnlyWithDescription);
+                .postItemRequestDto(2L, itemRequestDtoOnlyWithDescription);
     }
 
     @SneakyThrows
@@ -109,45 +113,46 @@ class ItemRequestControllerTest {
         ItemRequest itemRequestWithoutDescription = ItemRequest.builder()
                 .id(1L)
                 .build();
-        Mockito.when(itemRequestService.postItemRequest(2L, itemRequestWithoutDescription))
+        ItemRequestDto itemRequestDtoWithoutDescription = ItemRequestMapper.mapToItemRequestDto(itemRequestWithoutDescription, new ArrayList<>());
+        Mockito.when(itemRequestService.postItemRequestDto(2L, itemRequestDtoWithoutDescription))
                 .thenThrow(new EmptyDescriptionException("Описание запроса не может быть пустым"));
 
         mockMvc.perform(post("/requests")
                         .header("X-Sharer-User-Id", 2L)
-                        .content(objectMapper.writeValueAsBytes(itemRequestWithoutDescription))
+                        .content(objectMapper.writeValueAsBytes(itemRequestDtoWithoutDescription))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
         Mockito.verify(itemRequestService, Mockito.times(1))
-                .postItemRequest(2L, itemRequestWithoutDescription);
+                .postItemRequestDto(2L, itemRequestDtoWithoutDescription);
     }
 
     @SneakyThrows
     @Test
     void getAllRequestsMadeByRequester() {
-        Mockito.when(itemRequestService.getAllRequestsMadeByRequester(2L))
+        Mockito.when(itemRequestService.getAllRequestDtosMadeByRequester(2L))
                 .thenReturn(List.of(itemRequestDto));
 
         mockMvc.perform(get("/requests")
                         .header("X-Sharer-User-Id", 2L))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id", is(itemRequestDto.getId()), Long.class))
-                .andExpect(jsonPath("$[0].requester.id", is(itemRequestDto.getRequester().getId()), Long.class))
-                .andExpect(jsonPath("$[0].requester.name", is(itemRequestDto.getRequester().getName())))
-                .andExpect(jsonPath("$[0].requester.email", is(itemRequestDto.getRequester().getEmail())))
+                .andExpect(jsonPath("$[0].requesterDto.id", is(itemRequestDto.getRequesterDto().getId()), Long.class))
+                .andExpect(jsonPath("$[0].requesterDto.name", is(itemRequestDto.getRequesterDto().getName())))
+                .andExpect(jsonPath("$[0].requesterDto.email", is(itemRequestDto.getRequesterDto().getEmail())))
                 .andExpect(jsonPath("$[0].description", is(itemRequestDto.getDescription())))
                 .andExpect(jsonPath("$[0].created", is(now.toString())));
 
         Mockito.verify(itemRequestService, Mockito.times(1))
-                .getAllRequestsMadeByRequester(2L);
+                .getAllRequestDtosMadeByRequester(2L);
     }
 
     @SneakyThrows
     @Test
     void getPagedRequestsMadeByOtherUsers() {
-        Mockito.when(itemRequestService.getPagedRequestsMadeByOtherUsers(1L, null, null))
+        Mockito.when(itemRequestService.getPagedRequestDtosMadeByOtherUsers(1L, null, null))
                 .thenReturn(new ArrayList<>());
 
         mockMvc.perform(get("/requests/all")
@@ -157,7 +162,7 @@ class ItemRequestControllerTest {
                 .andExpect(jsonPath("$", is(new ArrayList())));
 
         Mockito.verify(itemRequestService, Mockito.times(1))
-                .getPagedRequestsMadeByOtherUsers(1L, null, null);
+                .getPagedRequestDtosMadeByOtherUsers(1L, null, null);
     }
 
     @SneakyThrows
@@ -170,9 +175,9 @@ class ItemRequestControllerTest {
                         .header("X-Sharer-User-Id", 2L))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(itemRequest.getId()), Long.class))
-                .andExpect(jsonPath("$.requester.id", is(itemRequest.getRequester().getId()), Long.class))
-                .andExpect(jsonPath("$.requester.name", is(itemRequest.getRequester().getName())))
-                .andExpect(jsonPath("$.requester.email", is(itemRequest.getRequester().getEmail())))
+                .andExpect(jsonPath("$.requesterDto.id", is(itemRequest.getRequester().getId()), Long.class))
+                .andExpect(jsonPath("$.requesterDto.name", is(itemRequest.getRequester().getName())))
+                .andExpect(jsonPath("$.requesterDto.email", is(itemRequest.getRequester().getEmail())))
                 .andExpect(jsonPath("$.description", is(itemRequest.getDescription())))
                 .andExpect(jsonPath("$.created", is(now.toString())));
 
@@ -191,4 +196,4 @@ class ItemRequestControllerTest {
 
         Mockito.verify(itemRequestService, Mockito.times(1)).getRequestDto(2L, 100L);
     }
-}*/
+}

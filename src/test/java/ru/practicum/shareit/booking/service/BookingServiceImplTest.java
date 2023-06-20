@@ -1,4 +1,3 @@
-/*
 package ru.practicum.shareit.booking.service;
 
 import org.junit.jupiter.api.Test;
@@ -9,15 +8,21 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import ru.practicum.shareit.booking.dto.BookingDto;
+import ru.practicum.shareit.booking.dto.BookingDtoIn;
+import ru.practicum.shareit.booking.dto.BookingDtoOutForController;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.booking.status.BookingStatus;
 import ru.practicum.shareit.exception.IllegalAccessException;
 import ru.practicum.shareit.exception.*;
+import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemDtoForSearch;
+import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
@@ -55,22 +60,12 @@ class BookingServiceImplTest {
             .email("user2@user.ru")
             .build();
 
-    List<User> users = List.of(user1, user2);
-
     Item item1 = Item.builder()
             .id(1L)
             .name("УШМ")
             .description("Углошлифовальная машина")
             .available(true)
             .owner(user1)
-            .build();
-
-    Item item2 = Item.builder()
-            .id(2L)
-            .name("Канистра")
-            .description("Для ГСМ, V = 20 л")
-            .available(true)
-            .owner(user2)
             .build();
 
     Item item3 = Item.builder()
@@ -81,16 +76,20 @@ class BookingServiceImplTest {
             .owner(user2)
             .build();
 
-    Booking booking1 = Booking.builder()
+    BookingDtoIn bookingDtoIn1 = BookingDtoIn.builder()
             .id(1L)
-            .item(item1)
-            .booker(user2)
             .start(LocalDateTime.now().plusHours(1L))
             .end(LocalDateTime.now().plusDays(1L))
+            .itemId(1L)
+            .bookerId(2L)
             .status(BookingStatus.WAITING)
             .build();
 
-    BookingDto bookingDto = BookingMapper.mapToBookingDto(booking1);
+    Booking booking1 = BookingMapper.mapToBooking(bookingDtoIn1, item1, user2);
+
+    BookingDtoOutForController bookingDtoOutForController1 = BookingMapper.mapToBookingDtoOutForController(booking1);
+
+    LocalDateTime now = LocalDateTime.now();
 
     @Test
     void createBooking() {
@@ -102,17 +101,17 @@ class BookingServiceImplTest {
                 .thenReturn(item1);
         Mockito.when(userRepository.getReferenceById(2L))
                 .thenReturn(user2);
-        Mockito.when(bookingService.createBooking(bookingDto, 2L))
+        Mockito.when(bookingRepository.save(booking1))
                 .thenReturn(booking1);
 
-        Booking createdBooking = bookingService.createBooking(bookingDto, 2L);
-        assertThat(createdBooking, equalTo(booking1));
+        BookingDtoOutForController createdBooking = bookingService.createBookingDto(bookingDtoIn1, 2L);
+        assertThat(createdBooking, equalTo(bookingDtoOutForController1));
 
-        Mockito.verify(userRepository, Mockito.times(2)).findById(2L);
-        Mockito.verify(userRepository, Mockito.times(2)).getReferenceById(2L);
-        Mockito.verify(itemRepository, Mockito.times(2)).findById(1L);
-        Mockito.verify(itemRepository, Mockito.times(2)).getReferenceById(1L);
-        Mockito.verify(bookingRepository, Mockito.times(1)).save(createdBooking);
+        Mockito.verify(userRepository, Mockito.times(1)).findById(2L);
+        Mockito.verify(userRepository, Mockito.times(1)).getReferenceById(2L);
+        Mockito.verify(itemRepository, Mockito.times(1)).findById(1L);
+        Mockito.verify(itemRepository, Mockito.times(1)).getReferenceById(1L);
+        Mockito.verify(bookingRepository, Mockito.times(1)).save(booking1);
     }
 
     @Test
@@ -126,7 +125,7 @@ class BookingServiceImplTest {
         Mockito.when(userRepository.findById(1L))
                 .thenReturn(Optional.of(user1));
 
-        BookingDto bookingDto = BookingDto.builder()
+        BookingDtoIn bookingDtoIn = BookingDtoIn.builder()
                 .id(2L)
                 .itemId(3L)
                 .start(LocalDateTime.now().plusHours(1L))
@@ -134,7 +133,7 @@ class BookingServiceImplTest {
                 .build();
 
         ItemNotAvailableException itemNotAvailableException = assertThrows(ItemNotAvailableException.class,
-                () -> bookingService.createBooking(bookingDto, 1L));
+                () -> bookingService.createBookingDto(bookingDtoIn, 1L));
         assertEquals(itemNotAvailableException.getMessage(), "Данная вещь в настоящий момент занята");
 
         Mockito.verify(userRepository, Mockito.times(1)).findById(1L);
@@ -142,7 +141,7 @@ class BookingServiceImplTest {
         Mockito.verify(userRepository, Mockito.never()).findById(2L);
         Mockito.verify(userRepository, Mockito.never()).getReferenceById(1L);
         Mockito.verify(itemRepository, Mockito.times(1)).findById(3L);
-        Mockito.verify(bookingRepository, Mockito.never()).save(BookingMapper.mapToBooking(bookingDto, item3, user1));
+        Mockito.verify(bookingRepository, Mockito.never()).save(BookingMapper.mapToBooking(bookingDtoIn, item3, user1));
     }
 
     @Test
@@ -152,41 +151,42 @@ class BookingServiceImplTest {
         Mockito.when(userRepository.findById(1L))
                 .thenReturn(Optional.of(user1));
 
-        BookingDto bookingDto = BookingDto.builder()
+        BookingDtoIn bookingDtoIn = BookingDtoIn.builder()
                 .id(2L)
                 .itemId(3L)
                 .build();
 
         IncorrectDateException incorrectDateException = assertThrows(IncorrectDateException.class,
-                () -> bookingService.createBooking(bookingDto, 1L));
+                () -> bookingService.createBookingDto(bookingDtoIn, 1L));
 
         assertEquals(incorrectDateException.getMessage(), "Некорректная дата аренды");
 
         Mockito.verify(userRepository, Mockito.times(1)).findById(1L);
         Mockito.verify(itemRepository, Mockito.times(1)).findById(3L);
-        Mockito.verify(bookingRepository, Mockito.never()).save(BookingMapper.mapToBooking(bookingDto, item3, user1));
+        Mockito.verify(bookingRepository, Mockito.never()).save(BookingMapper.mapToBooking(bookingDtoIn, item3, user1));
     }
 
     @Test
     void patchBookingWithUpdatedStatus() {
-        Booking updatedBooking1 = Booking.builder()
+        BookingDtoIn updatedBookingDtoIn1 = BookingDtoIn.builder()
                 .id(booking1.getId())
-                .item(booking1.getItem())
-                .booker(booking1.getBooker())
+                .itemId(booking1.getItem().getId())
+                .bookerId(booking1.getBooker().getId())
                 .start(booking1.getStart())
                 .end(booking1.getEnd())
-                .status(BookingStatus.APPROVED)
+                .status(BookingStatus.REJECTED)
                 .build();
+
+        Booking updatedBooking1 = BookingMapper.mapToBooking(updatedBookingDtoIn1, booking1.getItem(), booking1.getBooker());
+
+        BookingDtoOutForController updatedBookingDtoOutForController1 = BookingMapper.mapToBookingDtoOutForController(updatedBooking1);
 
         Mockito.when(bookingRepository.findById(booking1.getId()))
                 .thenReturn(Optional.of(booking1));
         Mockito.when(itemRepository.getReferenceById(booking1.getItem().getId()))
                 .thenReturn(booking1.getItem());
-        Mockito.when(bookingService.patchBookingWithUpdatedStatus(
-                        booking1.getId(), booking1.getItem().getOwner().getId(), true))
-                .thenReturn(booking1);
-
-        assertThat(booking1, equalTo(updatedBooking1));
+        assertThat(bookingService.patchBookingDtoWithUpdatedStatus(
+                booking1.getId(), booking1.getItem().getOwner().getId(), false), equalTo(updatedBookingDtoOutForController1));
 
         Mockito.verify(bookingRepository, Mockito.times(1)).save(updatedBooking1);
         Mockito.verify(itemRepository, Mockito.never())
@@ -196,15 +196,18 @@ class BookingServiceImplTest {
     @Test
     void patchBookingWithDuplicatedStatus() {
         booking1.setStatus(BookingStatus.APPROVED);
-
-        Booking updatedBooking1 = Booking.builder()
+        BookingDtoIn updatedBookingDtoIn1 = BookingDtoIn.builder()
                 .id(booking1.getId())
-                .item(booking1.getItem())
-                .booker(booking1.getBooker())
+                .itemId(booking1.getItem().getId())
+                .bookerId(booking1.getBooker().getId())
                 .start(booking1.getStart())
                 .end(booking1.getEnd())
                 .status(BookingStatus.APPROVED)
                 .build();
+
+        Booking updatedBooking1 = BookingMapper.mapToBooking(updatedBookingDtoIn1, booking1.getItem(), booking1.getBooker());
+
+        BookingDtoOutForController updatedBookingDtoOutForController1 = BookingMapper.mapToBookingDtoOutForController(updatedBooking1);
 
         Mockito.when(bookingRepository.findById(booking1.getId()))
                 .thenReturn(Optional.of(booking1));
@@ -212,8 +215,8 @@ class BookingServiceImplTest {
                 .thenReturn(booking1.getItem());
 
         DuplicateStatusException duplicateStatusException = assertThrows(DuplicateStatusException.class,
-                () -> bookingService.patchBookingWithUpdatedStatus(
-                        booking1.getId(), booking1.getItem().getOwner().getId(), true));
+                () -> bookingService.patchBookingDtoWithUpdatedStatus(
+                        updatedBooking1.getId(), booking1.getItem().getOwner().getId(), true));
 
         assertThat(duplicateStatusException.getMessage(), equalTo("Данный статус уже установлен ранее."));
 
@@ -222,14 +225,18 @@ class BookingServiceImplTest {
 
     @Test
     void patchBookingByUserWithoutPatchingRights() {
-        Booking updatedBooking1 = Booking.builder()
+        BookingDtoIn updatedBookingDtoIn1 = BookingDtoIn.builder()
                 .id(booking1.getId())
-                .item(booking1.getItem())
-                .booker(booking1.getBooker())
+                .itemId(booking1.getItem().getId())
+                .bookerId(booking1.getBooker().getId())
                 .start(booking1.getStart())
                 .end(booking1.getEnd())
                 .status(BookingStatus.APPROVED)
                 .build();
+
+        Booking updatedBooking1 = BookingMapper.mapToBooking(updatedBookingDtoIn1, booking1.getItem(), booking1.getBooker());
+
+        BookingDtoOutForController updatedBookingDtoOutForController1 = BookingMapper.mapToBookingDtoOutForController(updatedBooking1);
 
         Mockito.when(bookingRepository.findById(booking1.getId()))
                 .thenReturn(Optional.of(booking1));
@@ -237,7 +244,7 @@ class BookingServiceImplTest {
                 .thenReturn(booking1.getItem());
 
         IllegalAccessException illegalAccessException = assertThrows(IllegalAccessException.class,
-                () -> bookingService.patchBookingWithUpdatedStatus(booking1.getId(), user2.getId(), true));
+                () -> bookingService.patchBookingDtoWithUpdatedStatus(booking1.getId(), user2.getId(), true));
 
         assertEquals(illegalAccessException.getMessage(), "Пользователь с id = " + user2.getId() +
                 " не имеет права доступа к информации о бронировании с id = " + booking1);
@@ -254,7 +261,7 @@ class BookingServiceImplTest {
         Mockito.when(itemRepository.getReferenceById(1L))
                 .thenReturn(item1);
 
-        assertThat(bookingService.getBooking(1L, 2L), equalTo(booking1));
+        assertThat(bookingService.getBookingDto(1L, 2L), equalTo(bookingDtoOutForController1));
 
         Mockito.verify(bookingRepository, Mockito.times(1)).findById(booking1.getId());
         Mockito.verify(itemRepository, Mockito.never()).getReferenceById(booking1.getItem().getId());
@@ -271,7 +278,7 @@ class BookingServiceImplTest {
                 .thenReturn(item1);
 
         IllegalAccessException illegalAccessException = assertThrows(IllegalAccessException.class,
-                () -> bookingService.getBooking(1L, 3L));
+                () -> bookingService.getBookingDto(1L, 3L));
 
         assertEquals(illegalAccessException.getMessage(), "Пользователь с id = " + user3.getId() +
                 " не имеет права доступа к информации о вещи с id = " + booking1);
@@ -291,13 +298,15 @@ class BookingServiceImplTest {
                 .status(BookingStatus.WAITING)
                 .build();
 
+        BookingDtoOutForController bookingDtoOutForController2 = BookingMapper.mapToBookingDtoOutForController(booking2);
+
         Mockito.when(userRepository.findById(2L))
                 .thenReturn(Optional.of(user2));
         Mockito.when(bookingRepository.getAllBookingsByBooker_Id(2L))
                 .thenReturn(List.of(booking2, booking1));
 
-        assertThat(bookingService.getAllBookingsByUser(2L, "WAITING", null, null),
-                equalTo(List.of(booking2, booking1)));
+        assertThat(bookingService.getAllBookingDtosByUser(2L, "WAITING", null, null),
+                equalTo(List.of(bookingDtoOutForController2, bookingDtoOutForController1)));
 
         Mockito.verify(userRepository, Mockito.times(1)).findById(2L);
         Mockito.verify(bookingRepository, Mockito.times(1)).getAllBookingsByBooker_Id(2L);
@@ -314,12 +323,15 @@ class BookingServiceImplTest {
                 .status(BookingStatus.WAITING)
                 .build();
 
+        BookingDtoOutForController bookingDtoOutForController2 = BookingMapper.mapToBookingDtoOutForController(booking2);
+
+
         Mockito.when(userRepository.findById(2L))
                 .thenReturn(Optional.of(user2));
         Mockito.when(bookingRepository.getAllBookingsByBooker_Id(2L))
                 .thenReturn(List.of(booking1, booking2));
 
-        assertThat(bookingService.getAllBookingsByUser(2L, "CURRENT", null, null),
+        assertThat(bookingService.getAllBookingDtosByUser(2L, "CURRENT", null, null),
                 equalTo(new ArrayList<>()));
 
         Mockito.verify(userRepository, Mockito.times(1)).findById(2L);
@@ -332,17 +344,19 @@ class BookingServiceImplTest {
                 .id(2L)
                 .item(item1)
                 .booker(user2)
-                .start(LocalDateTime.now().plusDays(2L))
-                .end(LocalDateTime.now().plusDays(3L))
+                .start(now.plusDays(2L))
+                .end(now.plusDays(3L))
                 .status(BookingStatus.WAITING)
                 .build();
+
+        BookingDtoOutForController bookingDtoOutForController2 = BookingMapper.mapToBookingDtoOutForController(booking2);
 
         Mockito.when(userRepository.findById(2L))
                 .thenReturn(Optional.of(user2));
         Mockito.when(bookingRepository.getAllBookingsByBooker_Id(2L))
                 .thenReturn(List.of(booking1, booking2));
 
-        assertThat(bookingService.getAllBookingsByUser(2L, "PAST", null, null),
+        assertThat(bookingService.getAllBookingDtosByUser(2L, "PAST", null, null),
                 equalTo(new ArrayList<>()));
 
         Mockito.verify(userRepository, Mockito.times(1)).findById(2L);
@@ -355,17 +369,19 @@ class BookingServiceImplTest {
                 .id(2L)
                 .item(item1)
                 .booker(user2)
-                .start(LocalDateTime.now().plusDays(2L))
-                .end(LocalDateTime.now().plusDays(3L))
+                .start(now.plusDays(2L))
+                .end(now.plusDays(3L))
                 .status(BookingStatus.WAITING)
                 .build();
+
+        BookingDtoOutForController bookingDtoOutForController2 = BookingMapper.mapToBookingDtoOutForController(booking2);
 
         Mockito.when(userRepository.findById(2L))
                 .thenReturn(Optional.of(user2));
         Mockito.when(bookingRepository.getAllBookingsByBooker_Id(2L))
                 .thenReturn(List.of(booking1, booking2));
 
-        assertThat(bookingService.getAllBookingsByUser(2L, "REJECTED", null, null),
+        assertThat(bookingService.getAllBookingDtosByUser(2L, "REJECTED", null, null),
                 equalTo(new ArrayList<>()));
 
         Mockito.verify(userRepository, Mockito.times(1)).findById(2L);
@@ -378,18 +394,20 @@ class BookingServiceImplTest {
                 .id(2L)
                 .item(item1)
                 .booker(user2)
-                .start(LocalDateTime.now().plusDays(2L))
-                .end(LocalDateTime.now().plusDays(3L))
+                .start(now.plusDays(2L))
+                .end(now.plusDays(3L))
                 .status(BookingStatus.WAITING)
                 .build();
+
+        BookingDtoOutForController bookingDtoOutForController2 = BookingMapper.mapToBookingDtoOutForController(booking2);
 
         Mockito.when(userRepository.findById(2L))
                 .thenReturn(Optional.of(user2));
         Mockito.when(bookingRepository.getAllBookingsByBooker_Id(2L))
                 .thenReturn(List.of(booking2, booking1));
 
-        assertThat(bookingService.getAllBookingsByUser(2L, "ALL", null, null),
-                equalTo(List.of(booking2, booking1)));
+        assertThat(bookingService.getAllBookingDtosByUser(2L, "ALL", null, null),
+                equalTo(List.of(bookingDtoOutForController2, bookingDtoOutForController1)));
 
         Mockito.verify(userRepository, Mockito.times(1)).findById(2L);
         Mockito.verify(bookingRepository, Mockito.times(1)).getAllBookingsByBooker_Id(2L);
@@ -397,25 +415,27 @@ class BookingServiceImplTest {
 
     @Test
     void getAllBookingsByUserStatusFuture() {
-        booking1.setStart(LocalDateTime.now().plusDays(20L));
-        booking1.setEnd(LocalDateTime.now().plusDays(30L));
+        booking1.setStart(now.plusHours(1L));
+        booking1.setEnd(now.plusDays(1L));
 
         Booking booking2 = Booking.builder()
                 .id(2L)
                 .item(item1)
                 .booker(user2)
-                .start(LocalDateTime.now().plusDays(2L))
-                .end(LocalDateTime.now().plusDays(3L))
+                .start(now)
+                .end(now)
                 .status(BookingStatus.WAITING)
                 .build();
+
+        BookingDtoOutForController bookingDtoOutForController2 = BookingMapper.mapToBookingDtoOutForController(booking2);
 
         Mockito.when(userRepository.findById(2L))
                 .thenReturn(Optional.of(user2));
         Mockito.when(bookingRepository.getAllBookingsByBooker_Id(2L))
                 .thenReturn(List.of(booking1, booking2));
 
-        assertThat(bookingService.getAllBookingsByUser(2L, "FUTURE", null, null),
-                equalTo(List.of(booking1, booking2)));
+        assertThat(bookingService.getAllBookingDtosByUser(2L, "FUTURE", null, null),
+                equalTo(List.of(bookingDtoOutForController1, bookingDtoOutForController2)));
 
         Mockito.verify(userRepository, Mockito.times(1)).findById(2L);
         Mockito.verify(bookingRepository, Mockito.times(1)).getAllBookingsByBooker_Id(2L);
@@ -429,8 +449,8 @@ class BookingServiceImplTest {
         Mockito.when(bookingRepository.getAllBookingsByBooker_Id(2L, getPage(0, 10)))
                 .thenReturn(pagedList);
 
-        assertThat(bookingService.getAllBookingsByUser(2L, "WAITING", 0, 10),
-                equalTo(pagedList.getContent()));
+        assertThat(bookingService.getAllBookingDtosByUser(2L, "WAITING", 0, 10),
+                equalTo(BookingMapper.mapToBookingDtoOutForController(pagedList.getContent())));
 
         Mockito.verify(userRepository, Mockito.times(1)).findById(2L);
         Mockito.verify(bookingRepository, Mockito.times(1))
@@ -444,8 +464,8 @@ class BookingServiceImplTest {
         Mockito.when(bookingRepository.getAllBookingsForOwnerItems(1L))
                 .thenReturn(List.of(booking1));
 
-        assertThat(bookingService.getAllBookingsForUserItems(1L, "WAITING", null, null),
-                equalTo(List.of(booking1)));
+        assertThat(bookingService.getAllBookingDtosForUserItems(1L, "WAITING", null, null),
+                equalTo(BookingMapper.mapToBookingDtoOutForController(List.of(booking1))));
 
         Mockito.verify(userRepository, Mockito.times(1)).findById(1L);
         Mockito.verify(bookingRepository, Mockito.times(1))
@@ -459,7 +479,7 @@ class BookingServiceImplTest {
         Mockito.when(bookingRepository.getAllBookingsForOwnerItems(2L))
                 .thenReturn(new ArrayList<>());
 
-        assertThat(bookingService.getAllBookingsForUserItems(2L, "WAITING", null, null),
+        assertThat(bookingService.getAllBookingDtosForUserItems(2L, "WAITING", null, null),
                 equalTo(new ArrayList<>()));
 
         Mockito.verify(userRepository, Mockito.times(1)).findById(2L);
@@ -475,7 +495,7 @@ class BookingServiceImplTest {
                 .thenReturn(new ArrayList<>());
 
         WrongBookingStatusException wrongBookingStatusException = assertThrows(WrongBookingStatusException.class,
-                () -> bookingService.getAllBookingsForUserItems(
+                () -> bookingService.getAllBookingDtosForUserItems(
                         2L, "INCORRECT STATUS", null, null));
 
         assertThat(wrongBookingStatusException.getMessage(),
@@ -495,8 +515,8 @@ class BookingServiceImplTest {
         Mockito.when(bookingRepository.getAllBookingsForOwnerItems(1L, getPage(0, 10)))
                 .thenReturn(pagedList);
 
-        assertThat(bookingService.getAllBookingsForUserItems(1L, "WAITING", 0, 10),
-                equalTo(pagedList.getContent()));
+        assertThat(bookingService.getAllBookingDtosForUserItems(1L, "WAITING", 0, 10),
+                equalTo(BookingMapper.mapToBookingDtoOutForController(pagedList.getContent())));
 
         Mockito.verify(userRepository, Mockito.times(1)).findById(1L);
         Mockito.verify(bookingRepository, Mockito.times(1))
@@ -509,4 +529,4 @@ class BookingServiceImplTest {
         }
         return null;
     }
-}*/
+}
