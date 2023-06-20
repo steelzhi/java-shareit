@@ -413,8 +413,8 @@ class BookingServiceImplTest {
                 .id(2L)
                 .item(item1)
                 .booker(user2)
-                .start(now)
-                .end(now)
+                .start(now.plusDays(1L))
+                .end(now.plusDays(2L))
                 .status(BookingStatus.WAITING)
                 .build();
 
@@ -424,10 +424,10 @@ class BookingServiceImplTest {
         Mockito.when(userRepository.findById(2L))
                 .thenReturn(Optional.of(user2));
         Mockito.when(bookingRepository.getAllBookingsByBooker_Id(2L))
-                .thenReturn(List.of(booking1, booking2));
+                .thenReturn(List.of(booking2, booking1));
 
         assertThat(bookingService.getAllBookingDtosByUser(2L, "FUTURE", null, null),
-                equalTo(List.of(bookingDtoOutForController1, bookingDtoOutForController2)));
+                equalTo(List.of(bookingDtoOutForController2, bookingDtoOutForController1)));
 
         Mockito.verify(userRepository, Mockito.times(1)).findById(2L);
         Mockito.verify(bookingRepository, Mockito.times(1)).getAllBookingsByBooker_Id(2L);
