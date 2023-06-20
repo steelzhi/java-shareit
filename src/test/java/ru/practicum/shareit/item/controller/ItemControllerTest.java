@@ -133,7 +133,8 @@ class ItemControllerTest {
                 .owner(item2.getOwner())
                 .build();
 
-        ItemDto patchedItemDto = ItemMapper.mapToItemDto(patchedItem, null, null, null);
+        ItemDto patchedItemDto =
+                ItemMapper.mapToItemDto(patchedItem, null, null, null);
 
         Mockito.when(itemService.patchItemDto(2L, patchedItemDto, 2L))
                 .thenReturn(patchedItemDto);
@@ -153,7 +154,8 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$.owner.name", is(patchedItem.getOwner().getName())))
                 .andExpect(jsonPath("$.owner.email", is(patchedItem.getOwner().getEmail())));
 
-        Mockito.verify(itemService, Mockito.times(1)).patchItemDto(2L, patchedItemDto, 2L);
+        Mockito.verify(itemService, Mockito.times(1))
+                .patchItemDto(2L, patchedItemDto, 2L);
     }
 
     @SneakyThrows
@@ -266,12 +268,16 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$.itemDtoForSearch.name", is(comment.getItem().getName())))
                 .andExpect(jsonPath("$.itemDtoForSearch.description", is(comment.getItem().getDescription())))
                 .andExpect(jsonPath("$.itemDtoForSearch.available", is(comment.getItem().getAvailable())))
-                .andExpect(jsonPath("$.itemDtoForSearch.owner.id", is(comment.getItem().getOwner().getId()), Long.class))
-                .andExpect(jsonPath("$.itemDtoForSearch.owner.name", is(comment.getItem().getOwner().getName())))
-                .andExpect(jsonPath("$.itemDtoForSearch.owner.email", is(comment.getItem().getOwner().getEmail())))
+                .andExpect(jsonPath("$.itemDtoForSearch.owner.id",
+                        is(comment.getItem().getOwner().getId()), Long.class))
+                .andExpect(jsonPath("$.itemDtoForSearch.owner.name",
+                        is(comment.getItem().getOwner().getName())))
+                .andExpect(jsonPath("$.itemDtoForSearch.owner.email",
+                        is(comment.getItem().getOwner().getEmail())))
                 .andExpect(jsonPath("$.authorName", is(comment.getAuthor().getName())));
 
-        Mockito.verify(itemService, Mockito.times(1)).postCommentDto(1L, commentDto, 2L);
+        Mockito.verify(itemService, Mockito.times(1))
+                .postCommentDto(1L, commentDto, 2L);
     }
 
     @SneakyThrows

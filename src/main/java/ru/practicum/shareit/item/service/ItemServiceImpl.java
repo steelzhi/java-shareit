@@ -178,7 +178,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private UserDto checkAndGetUserDtoIfExists(long userId) {
-        User user =  userRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserDoesNotExistException("Пользователя с таким id не существует"));
         return UserMapper.mapToUserDto(user);
     }

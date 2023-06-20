@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.json.JsonTest;
 import org.springframework.boot.test.json.JacksonTester;
 import org.springframework.boot.test.json.JsonContent;
-import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
@@ -40,7 +39,6 @@ class BookingDtoInTest {
             .bookerId(user2.getId())
             .build();
 
-
     @Test
     @SneakyThrows
     void testBookingDto() {
@@ -57,6 +55,4 @@ class BookingDtoInTest {
         assertThat(result).extractingJsonPathStringValue("$.end")
                 .isEqualTo(now.plusDays(1L).format(DateTimeFormatter.ofPattern("YYYY-MM-dd'T'HH:mm:ss")));
     }
-
-
 }

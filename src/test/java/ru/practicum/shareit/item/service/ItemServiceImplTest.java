@@ -158,7 +158,8 @@ class ItemServiceImplTest {
                 .owner(user2)
                 .build();
 
-        ItemDto updatedItemDto2 = ItemMapper.mapToItemDto(updatedItem2, null, null, null);
+        ItemDto updatedItemDto2 =
+                ItemMapper.mapToItemDto(updatedItem2, null, null, null);
 
         Mockito.when(userRepository.findById(2L))
                 .thenReturn(Optional.of(user2));
@@ -186,7 +187,8 @@ class ItemServiceImplTest {
                 .owner(user2)
                 .build();
 
-        ItemDto updatedItemDto2 = ItemMapper.mapToItemDto(updatedItem2, null, null, null);
+        ItemDto updatedItemDto2 =
+                ItemMapper.mapToItemDto(updatedItem2, null, null, null);
 
         User user3 = User.builder()
                 .id(3L)
@@ -217,7 +219,8 @@ class ItemServiceImplTest {
                 .owner(user2)
                 .build();
 
-        ItemDto updatedItemDto2 = ItemMapper.mapToItemDto(updatedItem2, null, null, null);
+        ItemDto updatedItemDto2 =
+                ItemMapper.mapToItemDto(updatedItem2, null, null, null);
 
         Mockito.when(itemRepository.getReferenceById(2L))
                 .thenReturn(item2);
@@ -523,7 +526,8 @@ class ItemServiceImplTest {
                         " либо аренда еще не завершилась."));
 
         PostCommentProhibitedException postCommentProhibitedException = assertThrows(
-                PostCommentProhibitedException.class, () -> itemService.postCommentDto(1L, commentDto1, 2L));
+                PostCommentProhibitedException.class,
+                () -> itemService.postCommentDto(1L, commentDto1, 2L));
 
         assertThat(postCommentProhibitedException.getMessage(), equalTo("Вещь с id = " + item1.getId() +
                 " не была в аренде у пользователя с id = " + user2.getId() +

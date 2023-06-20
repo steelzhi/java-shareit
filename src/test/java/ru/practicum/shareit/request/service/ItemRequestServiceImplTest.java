@@ -17,8 +17,6 @@ import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.request.mapper.ItemRequestMapper;
 import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.request.repository.ItemRequestRepository;
-import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
@@ -84,7 +82,8 @@ class ItemRequestServiceImplTest {
         Mockito.when(itemRequestRepository.save(itemRequest))
                 .thenReturn(itemRequest);
 
-        ItemRequestDto savedItemRequestDto = ItemRequestMapper.mapToItemRequestDto(itemRequestRepository.save(itemRequest), List.of(itemDtoForSearch1));
+        ItemRequestDto savedItemRequestDto = ItemRequestMapper
+                .mapToItemRequestDto(itemRequestRepository.save(itemRequest), List.of(itemDtoForSearch1));
         savedItemRequestDto.setCreated(itemRequestDto.getCreated());
         assertThat(itemRequestDto, equalTo(savedItemRequestDto));
 
@@ -164,7 +163,8 @@ class ItemRequestServiceImplTest {
                 itemRequestService.getPagedRequestDtosMadeByOtherUsers(2L, null, null);
 
         assertThat(itemRequestDtos,
-                equalTo(List.of(ItemRequestMapper.mapToItemRequestDto(itemRequest, List.of(ItemMapper.mapToItemDtoForSearch(item1))))));
+                equalTo(List.of(ItemRequestMapper
+                        .mapToItemRequestDto(itemRequest, List.of(ItemMapper.mapToItemDtoForSearch(item1))))));
 
         Mockito.verify(itemRequestRepository, Mockito.times(1))
                 .findAllByRequester_IdNot(2L);
@@ -183,7 +183,8 @@ class ItemRequestServiceImplTest {
         ItemRequestDto retrievedItemRequestDto = itemRequestService.getRequestDto(2L, 1L);
 
         assertThat(retrievedItemRequestDto,
-                equalTo(ItemRequestMapper.mapToItemRequestDto(itemRequest, List.of(ItemMapper.mapToItemDtoForSearch(item1)))));
+                equalTo(ItemRequestMapper
+                        .mapToItemRequestDto(itemRequest, List.of(ItemMapper.mapToItemDtoForSearch(item1)))));
 
         Mockito.verify(itemRequestRepository, Mockito.times(1)).findById(1L);
     }

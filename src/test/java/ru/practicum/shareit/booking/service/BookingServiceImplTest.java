@@ -16,13 +16,8 @@ import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.booking.status.BookingStatus;
 import ru.practicum.shareit.exception.IllegalAccessException;
 import ru.practicum.shareit.exception.*;
-import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.dto.ItemDtoForSearch;
-import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
-import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
@@ -177,16 +172,19 @@ class BookingServiceImplTest {
                 .status(BookingStatus.REJECTED)
                 .build();
 
-        Booking updatedBooking1 = BookingMapper.mapToBooking(updatedBookingDtoIn1, booking1.getItem(), booking1.getBooker());
+        Booking updatedBooking1 =
+                BookingMapper.mapToBooking(updatedBookingDtoIn1, booking1.getItem(), booking1.getBooker());
 
-        BookingDtoOutForController updatedBookingDtoOutForController1 = BookingMapper.mapToBookingDtoOutForController(updatedBooking1);
+        BookingDtoOutForController updatedBookingDtoOutForController1 =
+                BookingMapper.mapToBookingDtoOutForController(updatedBooking1);
 
         Mockito.when(bookingRepository.findById(booking1.getId()))
                 .thenReturn(Optional.of(booking1));
         Mockito.when(itemRepository.getReferenceById(booking1.getItem().getId()))
                 .thenReturn(booking1.getItem());
         assertThat(bookingService.patchBookingDtoWithUpdatedStatus(
-                booking1.getId(), booking1.getItem().getOwner().getId(), false), equalTo(updatedBookingDtoOutForController1));
+                        booking1.getId(), booking1.getItem().getOwner().getId(), false),
+                equalTo(updatedBookingDtoOutForController1));
 
         Mockito.verify(bookingRepository, Mockito.times(1)).save(updatedBooking1);
         Mockito.verify(itemRepository, Mockito.never())
@@ -205,9 +203,8 @@ class BookingServiceImplTest {
                 .status(BookingStatus.APPROVED)
                 .build();
 
-        Booking updatedBooking1 = BookingMapper.mapToBooking(updatedBookingDtoIn1, booking1.getItem(), booking1.getBooker());
-
-        BookingDtoOutForController updatedBookingDtoOutForController1 = BookingMapper.mapToBookingDtoOutForController(updatedBooking1);
+        Booking updatedBooking1 =
+                BookingMapper.mapToBooking(updatedBookingDtoIn1, booking1.getItem(), booking1.getBooker());
 
         Mockito.when(bookingRepository.findById(booking1.getId()))
                 .thenReturn(Optional.of(booking1));
@@ -234,9 +231,8 @@ class BookingServiceImplTest {
                 .status(BookingStatus.APPROVED)
                 .build();
 
-        Booking updatedBooking1 = BookingMapper.mapToBooking(updatedBookingDtoIn1, booking1.getItem(), booking1.getBooker());
-
-        BookingDtoOutForController updatedBookingDtoOutForController1 = BookingMapper.mapToBookingDtoOutForController(updatedBooking1);
+        Booking updatedBooking1 =
+                BookingMapper.mapToBooking(updatedBookingDtoIn1, booking1.getItem(), booking1.getBooker());
 
         Mockito.when(bookingRepository.findById(booking1.getId()))
                 .thenReturn(Optional.of(booking1));
@@ -298,7 +294,8 @@ class BookingServiceImplTest {
                 .status(BookingStatus.WAITING)
                 .build();
 
-        BookingDtoOutForController bookingDtoOutForController2 = BookingMapper.mapToBookingDtoOutForController(booking2);
+        BookingDtoOutForController bookingDtoOutForController2 =
+                BookingMapper.mapToBookingDtoOutForController(booking2);
 
         Mockito.when(userRepository.findById(2L))
                 .thenReturn(Optional.of(user2));
@@ -323,9 +320,6 @@ class BookingServiceImplTest {
                 .status(BookingStatus.WAITING)
                 .build();
 
-        BookingDtoOutForController bookingDtoOutForController2 = BookingMapper.mapToBookingDtoOutForController(booking2);
-
-
         Mockito.when(userRepository.findById(2L))
                 .thenReturn(Optional.of(user2));
         Mockito.when(bookingRepository.getAllBookingsByBooker_Id(2L))
@@ -348,8 +342,6 @@ class BookingServiceImplTest {
                 .end(now.plusDays(3L))
                 .status(BookingStatus.WAITING)
                 .build();
-
-        BookingDtoOutForController bookingDtoOutForController2 = BookingMapper.mapToBookingDtoOutForController(booking2);
 
         Mockito.when(userRepository.findById(2L))
                 .thenReturn(Optional.of(user2));
@@ -374,8 +366,6 @@ class BookingServiceImplTest {
                 .status(BookingStatus.WAITING)
                 .build();
 
-        BookingDtoOutForController bookingDtoOutForController2 = BookingMapper.mapToBookingDtoOutForController(booking2);
-
         Mockito.when(userRepository.findById(2L))
                 .thenReturn(Optional.of(user2));
         Mockito.when(bookingRepository.getAllBookingsByBooker_Id(2L))
@@ -399,7 +389,8 @@ class BookingServiceImplTest {
                 .status(BookingStatus.WAITING)
                 .build();
 
-        BookingDtoOutForController bookingDtoOutForController2 = BookingMapper.mapToBookingDtoOutForController(booking2);
+        BookingDtoOutForController bookingDtoOutForController2 =
+                BookingMapper.mapToBookingDtoOutForController(booking2);
 
         Mockito.when(userRepository.findById(2L))
                 .thenReturn(Optional.of(user2));
@@ -427,7 +418,8 @@ class BookingServiceImplTest {
                 .status(BookingStatus.WAITING)
                 .build();
 
-        BookingDtoOutForController bookingDtoOutForController2 = BookingMapper.mapToBookingDtoOutForController(booking2);
+        BookingDtoOutForController bookingDtoOutForController2 =
+                BookingMapper.mapToBookingDtoOutForController(booking2);
 
         Mockito.when(userRepository.findById(2L))
                 .thenReturn(Optional.of(user2));

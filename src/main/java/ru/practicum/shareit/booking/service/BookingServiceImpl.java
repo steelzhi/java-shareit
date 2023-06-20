@@ -71,7 +71,8 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<BookingDtoOutForController> getAllBookingDtosByUser(long userId, String bookingStatus, Integer from, Integer size) {
+    public List<BookingDtoOutForController> getAllBookingDtosByUser(
+            long userId, String bookingStatus, Integer from, Integer size) {
         checkIfUserExists(userId);
         Pagination.checkIfPaginationParamsAreNotCorrect(from, size);
 
@@ -93,7 +94,8 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<BookingDtoOutForController> getAllBookingDtosForUserItems(long userId, String bookingStatus, Integer from, Integer size) {
+    public List<BookingDtoOutForController> getAllBookingDtosForUserItems(
+            long userId, String bookingStatus, Integer from, Integer size) {
         checkIfUserExists(userId);
         Pagination.checkIfPaginationParamsAreNotCorrect(from, size);
 
@@ -165,7 +167,8 @@ public class BookingServiceImpl implements BookingService {
     @Transactional(readOnly = true)
     private Booking getBookingIfUserHasAccessRights(long bookingId, long userId) {
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new BookingDoesNotExistException("Бронирования с id = " + bookingId + "не найдено."));
+                .orElseThrow(() ->
+                        new BookingDoesNotExistException("Бронирования с id = " + bookingId + "не найдено."));
         Item item = booking.getItem();
         if (booking.getBooker().getId() != userId && item.getOwner().getId() != userId) {
             throw new IllegalAccessException(
@@ -177,7 +180,8 @@ public class BookingServiceImpl implements BookingService {
     @Transactional(readOnly = true)
     private Booking getBookingIfUserHasPatchingRights(long bookingId, long userId) {
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new BookingDoesNotExistException("Бронирования с id = " + bookingId + "не найдено."));
+                .orElseThrow(() ->
+                        new BookingDoesNotExistException("Бронирования с id = " + bookingId + "не найдено."));
         Item item = booking.getItem();
         if (item.getOwner().getId() != userId) {
             throw new IllegalAccessException(

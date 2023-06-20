@@ -13,7 +13,15 @@ public interface BookingService {
 
     BookingDtoOutForController getBookingDto(long bookingId, long userId);
 
-    List<BookingDtoOutForController> getAllBookingDtosByUser(long userId, String bookingStatus, Integer from, Integer size);
+    List<BookingDtoOutForController> getAllBookingDtosByUser(
+            long userId,
+            String bookingStatus,
+            Integer from,
+            Integer size);
 
-    List<BookingDtoOutForController> getAllBookingDtosForUserItems(long userId, String bookingStatus, Integer from, Integer size);
+    List<BookingDtoOutForController> getAllBookingDtosForUserItems(
+            long userId,
+            String bookingStatus,
+            Integer from,
+            Integer size);
 }

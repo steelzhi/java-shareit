@@ -159,6 +159,9 @@
 							<exclude>
 								ru/practicum/shareit/**/PersistenceConfig.class
 							</exclude>
+							<exclude>
+								ru/practicum/shareit/ShareItApp.class
+							</exclude>
 						</excludes>
 					</configuration>
 					<executions>

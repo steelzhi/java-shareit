@@ -145,7 +145,6 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.email", is(patchedUserDto2.getEmail())));
 
         Mockito.verify(userService, Mockito.times(1)).patchUserDto(2L, patchedUserDto2);
-
     }
 
     @SneakyThrows

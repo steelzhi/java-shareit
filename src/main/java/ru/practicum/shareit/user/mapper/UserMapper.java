@@ -44,14 +44,4 @@ public class UserMapper {
         }
         return userDtos;
     }
-
-    public static List<User> mapToUser(List<UserDto> userDtos) {
-        List<User> users = new ArrayList<>();
-        if (userDtos != null) {
-            for (UserDto userDto : userDtos) {
-                users.add(mapToUser(userDto));
-            }
-        }
-        return users;
-    }
 }

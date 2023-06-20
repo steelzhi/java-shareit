@@ -47,7 +47,6 @@ class ItemRequestDtoTest {
 
     ItemDtoForSearch itemDtoForSearch1 = ItemMapper.mapToItemDtoForSearch(item1);
 
-
     LocalDateTime now = LocalDateTime.now();
 
     ItemRequest itemRequest = ItemRequest.builder()

@@ -12,7 +12,6 @@ import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
@@ -63,11 +62,13 @@ class CommentDtoTest {
         assertThat(result).extractingJsonPathNumberValue("$.itemDtoForSearch.id")
                 .isEqualTo(Math.toIntExact(item.getId()));
         assertThat(result).extractingJsonPathStringValue("$.itemDtoForSearch.name").isEqualTo("item");
-        assertThat(result).extractingJsonPathStringValue("$.itemDtoForSearch.description").isEqualTo("item description");
+        assertThat(result).extractingJsonPathStringValue("$.itemDtoForSearch.description")
+                .isEqualTo("item description");
         assertThat(result).extractingJsonPathNumberValue("$.itemDtoForSearch.owner.id")
                 .isEqualTo(Math.toIntExact(user1.getId()));
         assertThat(result).extractingJsonPathStringValue("$.itemDtoForSearch.owner.name").isEqualTo("user1");
-        assertThat(result).extractingJsonPathStringValue("$.itemDtoForSearch.owner.email").isEqualTo("user1@user.ru");
+        assertThat(result).extractingJsonPathStringValue("$.itemDtoForSearch.owner.email")
+                .isEqualTo("user1@user.ru");
         assertThat(result).extractingJsonPathBooleanValue("$.itemDtoForSearch.available").isEqualTo(true);
         assertThat(result).extractingJsonPathStringValue("$.authorName").isEqualTo("user2");
         assertThat(result).extractingJsonPathStringValue("$.created")
