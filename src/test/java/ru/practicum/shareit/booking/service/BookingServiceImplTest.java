@@ -22,6 +22,7 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -406,28 +407,37 @@ class BookingServiceImplTest {
 
     @Test
     void getAllBookingsByUserStatusFuture() {
-        booking1.setStart(now.plusHours(1L));
-        booking1.setEnd(now.plusDays(1L));
-
         Booking booking2 = Booking.builder()
                 .id(2L)
                 .item(item1)
                 .booker(user2)
-                .start(now.plusDays(1L))
-                .end(now.plusDays(2L))
+                .start(now.plusDays(1L).truncatedTo(ChronoUnit.SECONDS))
+                .end(now.plusDays(2L).truncatedTo(ChronoUnit.SECONDS))
                 .status(BookingStatus.WAITING)
                 .build();
 
         BookingDtoOutForController bookingDtoOutForController2 =
                 BookingMapper.mapToBookingDtoOutForController(booking2);
 
+        Booking booking3 = Booking.builder()
+                .id(3L)
+                .item(item1)
+                .booker(user2)
+                .start(now.plusDays(10L).truncatedTo(ChronoUnit.SECONDS))
+                .end(now.plusDays(20L).truncatedTo(ChronoUnit.SECONDS))
+                .status(BookingStatus.WAITING)
+                .build();
+
+        BookingDtoOutForController bookingDtoOutForController3 =
+                BookingMapper.mapToBookingDtoOutForController(booking3);
+
         Mockito.when(userRepository.findById(2L))
                 .thenReturn(Optional.of(user2));
         Mockito.when(bookingRepository.getAllBookingsByBooker_Id(2L))
-                .thenReturn(List.of(booking2, booking1));
+                .thenReturn(List.of(booking3, booking2));
 
         assertThat(bookingService.getAllBookingDtosByUser(2L, "FUTURE", null, null),
-                equalTo(List.of(bookingDtoOutForController2, bookingDtoOutForController1)));
+                equalTo(List.of(bookingDtoOutForController3, bookingDtoOutForController2)));
 
         Mockito.verify(userRepository, Mockito.times(1)).findById(2L);
         Mockito.verify(bookingRepository, Mockito.times(1)).getAllBookingsByBooker_Id(2L);
