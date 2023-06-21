@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.practicum.shareit.item.model.Item;
 
 import java.time.LocalDateTime;
 
@@ -16,7 +15,7 @@ import java.time.LocalDateTime;
 public class CommentDto {
     private Long id;
     private String text;
-    private Item item;
+    private ItemDtoForSearch itemDtoForSearch;
     private String authorName;
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
