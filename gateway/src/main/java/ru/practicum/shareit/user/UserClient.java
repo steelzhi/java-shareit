@@ -6,10 +6,14 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import ru.practicum.shareit.booking.dto.BookingState;
 import ru.practicum.shareit.client.BaseClient;
+import ru.practicum.shareit.user.dto.UserDto;
 
+import javax.validation.Valid;
 import java.util.Map;
 
 @Service
@@ -30,5 +34,19 @@ public class UserClient extends BaseClient {
         return get("");
     }
 
+    public ResponseEntity<Object> getUserDto(@PathVariable long id) {
+        return get("/" + id);
+    }
 
+    public ResponseEntity<Object> postUserDto(@RequestBody @Valid UserDto userDto) {
+        return post("", 0, userDto);
+    }
+
+    public ResponseEntity<Object> patchUserDto(long id, UserDto userDto) {
+        return patch("/" + id, userDto);
+    }
+
+    public ResponseEntity<Object> deleteUserDto(long userDtoId) {
+        return delete("/" + userDtoId);
+    }
 }
