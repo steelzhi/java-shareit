@@ -34,10 +34,10 @@ public class BookingClient extends BaseClient {
 
     public ResponseEntity<Object> getAllBookingDtosByUser(long userId, String state, Integer from, Integer size) {
         Map<String, Object> parameters = new HashMap<>();
-        //parameters.put("state", state);
+        parameters.put("state", state);
         parameters.put("from", from);
         parameters.put("size", size);
-        return get("?state=" + state, userId, parameters);
+        return get("?state={state}&from={from}&size={size}", userId, parameters);
 
     }
 
@@ -47,7 +47,7 @@ public class BookingClient extends BaseClient {
         parameters.put("state", state);
         parameters.put("from", from);
         parameters.put("size", size);
-        return get("/owner", userId, parameters);
+        return get("/owner?state={state}&from={from}&size={size}", userId, parameters);
     }
 
     public ResponseEntity<Object> bookItem(long userId, BookItemRequestDto requestDto) {

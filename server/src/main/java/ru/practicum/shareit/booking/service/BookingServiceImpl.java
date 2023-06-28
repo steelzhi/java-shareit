@@ -73,6 +73,7 @@ public class BookingServiceImpl implements BookingService {
     @Transactional(readOnly = true)
     public List<BookingDtoOutForController> getAllBookingDtosByUser(
             long userId, String bookingStatus, Integer from, Integer size) {
+        System.out.println(bookingStatus);
         checkIfUserExists(userId);
         Pagination.checkIfPaginationParamsAreNotCorrect(from, size);
 
