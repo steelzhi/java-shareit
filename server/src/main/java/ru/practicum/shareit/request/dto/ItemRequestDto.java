@@ -16,18 +16,15 @@ import java.util.List;
 
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonIgnoreProperties({"hibernateLazyInitializer"})
+//@JsonIgnoreProperties({"hibernateLazyInitializer"})
 @Data
 @Builder
 public class ItemRequestDto {
     private Long id;
     private UserDto requesterDto;
-
-    @NotBlank
     private String description;
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    @NotNull
     private LocalDateTime created;
     private List<ItemDtoForSearch> items;
 }

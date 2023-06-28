@@ -16,7 +16,6 @@ import java.util.List;
 
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonIgnoreProperties({"hibernateLazyInitializer"})
 @Data
 @Builder
 public class ItemRequestDto {
@@ -28,5 +27,4 @@ public class ItemRequestDto {
 
     @NotNull
     private LocalDateTime created;
-    private List<ItemDtoForSearch> items;
 }

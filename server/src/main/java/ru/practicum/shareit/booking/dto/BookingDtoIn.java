@@ -16,18 +16,9 @@ import java.time.LocalDateTime;
 public class BookingDtoIn {
 
     private Long id;
-
-    @NotNull
     private LocalDateTime start;
-
-    @NotNull
     private LocalDateTime end;
-
-    @NotNull
     private Long itemId;
-
-    @NotNull
     private Long bookerId;
-
     private BookingStatus status;
 }

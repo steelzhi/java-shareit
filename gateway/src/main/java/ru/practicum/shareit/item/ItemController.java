@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemDtoForSearch;
+import ru.practicum.shareit.util.Pagination;
 
 import javax.validation.Valid;
 import javax.websocket.server.PathParam;
@@ -44,6 +45,7 @@ public class ItemController {
     public ResponseEntity<Object> getAllItemsDtoByUser(@RequestHeader("X-Sharer-User-Id") long userId,
                                               @RequestParam(value = "from", required = false) Integer from,
                                               @RequestParam(value = "size", required = false) Integer size) {
+        Pagination.checkIfPaginationParamsAreNotCorrect(from, size);
         return itemClient.getAllItemsDtoByUser(userId, from, size);
     }
 
@@ -51,6 +53,7 @@ public class ItemController {
     public ResponseEntity<Object> searchItemDto(@PathParam("text") String text,
                                                 @RequestParam(value = "from", required = false) Integer from,
                                                 @RequestParam(value = "size", required = false) Integer size) {
+        Pagination.checkIfPaginationParamsAreNotCorrect(from, size);
         return itemClient.searchItemDto(text, from, size);
     }
 

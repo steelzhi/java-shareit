@@ -4,10 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.exception.IncorrectPaginationException;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
-
-import java.util.List;
+import ru.practicum.shareit.util.Pagination;
 
 @Controller
 @RequestMapping(path = "/requests")
@@ -31,11 +29,9 @@ public class ItemRequestController {
             @RequestHeader("X-Sharer-User-Id") long userId,
             @RequestParam(value = "from", required = false) Integer from,
             @RequestParam(value = "size", required = false) Integer size) {
-        if ((from == null && size == null) || (from >= 0 && size > 0)) {
-            return itemRequestClient.getPagedRequestDtosMadeByOtherUsers(userId, from, size);
-        }
+        Pagination.checkIfPaginationParamsAreNotCorrect(from, size);
 
-        throw new IncorrectPaginationException("Введены некорректные параметры для пагинации");
+        return itemRequestClient.getPagedRequestDtosMadeByOtherUsers(userId, from, size);
     }
 
     @GetMapping("{requestId}")

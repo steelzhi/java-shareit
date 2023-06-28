@@ -17,11 +17,8 @@ import java.util.List;
 @NoArgsConstructor
 public class ItemDto {
     private Long id;
-    @NotBlank
     private String name;
-    @NotBlank
     private String description;
-    @NotNull
     private Boolean available;
     private UserDto owner;
     private Long requestId;
