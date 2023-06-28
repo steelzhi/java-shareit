@@ -71,7 +71,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional(readOnly = true)
     public List<BookingDtoOutForController> getAllBookingDtosByUser(
-            long userId, String bookingStatus, Integer from, Integer size) {
+            long userId, BookingStatus bookingStatus, Integer from, Integer size) {
         checkIfUserExists(userId);
 
         List<Booking> userBookings = new ArrayList<>();
@@ -93,7 +93,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional(readOnly = true)
     public List<BookingDtoOutForController> getAllBookingDtosForUserItems(
-            long userId, String bookingStatus, Integer from, Integer size) {
+            long userId, BookingStatus bookingStatus, Integer from, Integer size) {
         checkIfUserExists(userId);
 
         List<Booking> itemBookings = new ArrayList<>();
@@ -112,18 +112,8 @@ public class BookingServiceImpl implements BookingService {
         return bookingDtos;
     }
 
-    private List<Booking> getBookingsWithDemandedStatus(List<Booking> bookings, String status) {
+    private List<Booking> getBookingsWithDemandedStatus(List<Booking> bookings, BookingStatus bookingStatus) {
         List<Booking> userBookingsWithDemandedStatus = new ArrayList<>();
-        if (status == null) {
-            status = "ALL";
-        }
-
-        BookingStatus bookingStatus;
-        try {
-            bookingStatus = BookingStatus.valueOf(status);
-        } catch (IllegalArgumentException e) {
-            throw new WrongBookingStatusException("Введен некорректный статус бронирования");
-        }
 
         for (Booking booking : bookings) {
             LocalDateTime now = LocalDateTime.now().minusNanos(delay);

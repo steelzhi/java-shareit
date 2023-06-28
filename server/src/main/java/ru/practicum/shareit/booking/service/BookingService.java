@@ -2,6 +2,7 @@ package ru.practicum.shareit.booking.service;
 
 import ru.practicum.shareit.booking.dto.BookingDtoIn;
 import ru.practicum.shareit.booking.dto.BookingDtoOutForController;
+import ru.practicum.shareit.booking.status.BookingStatus;
 
 import java.util.List;
 
@@ -15,13 +16,13 @@ public interface BookingService {
 
     List<BookingDtoOutForController> getAllBookingDtosByUser(
             long userId,
-            String bookingStatus,
+            BookingStatus bookingStatus,
             Integer from,
             Integer size);
 
     List<BookingDtoOutForController> getAllBookingDtosForUserItems(
             long userId,
-            String bookingStatus,
+            BookingStatus bookingStatus,
             Integer from,
             Integer size);
 }

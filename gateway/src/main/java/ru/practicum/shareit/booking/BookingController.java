@@ -30,12 +30,12 @@ public class BookingController {
                                                           @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") Integer from,
                                                           @Positive @RequestParam(name = "size", defaultValue = "10") Integer size) {
         Pagination.checkIfPaginationParamsAreNotCorrect(from, size);
-        if (bookingStatus != null) {
-            BookingState state = BookingState.from(bookingStatus)
-                    .orElseThrow(() -> new IllegalArgumentException("Unknown state: " + bookingStatus));
-        }
+
+        BookingState state = BookingState.from(bookingStatus)
+                .orElseThrow(() -> new IllegalArgumentException("Unknown state: " + bookingStatus));
+
         log.info("Get bookings with state {}, userId={}, from={}, size={}", bookingStatus, userId, from, size);
-        return bookingClient.getAllBookingDtosByUser(userId, bookingStatus, from, size);
+        return bookingClient.getAllBookingDtosByUser(userId, state, from, size);
     }
 
     @GetMapping("/owner")
@@ -45,12 +45,12 @@ public class BookingController {
             @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") Integer from,
             @Positive @RequestParam(name = "size", defaultValue = "10") Integer size) {
         Pagination.checkIfPaginationParamsAreNotCorrect(from, size);
-        if (bookingStatus != null) {
-            BookingState state = BookingState.from(bookingStatus)
-                    .orElseThrow(() -> new IllegalArgumentException("Unknown state: " + bookingStatus));
-        }
+
+        BookingState state = BookingState.from(bookingStatus)
+                .orElseThrow(() -> new IllegalArgumentException("Unknown state: " + bookingStatus));
+
         log.info("Get bookings with state {}, userId={}, from={}, size={}", bookingStatus, userId, from, size);
-        return bookingClient.getAllBookingDtosForUserItems(userId, bookingStatus, from, size);
+        return bookingClient.getAllBookingDtosForUserItems(userId, state, from, size);
     }
 
     @PostMapping
