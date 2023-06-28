@@ -30,7 +30,11 @@ public class UserController {
         }
 
         ResponseEntity<Object> result = userClient.getUsers();
-        lastAction = new UserAction(Actions.GET, result, 0L, null);
+        lastAction = UserAction.builder()
+                .action(Actions.GET)
+                .lastResponse(result)
+                .id(0L)
+                .build();
 
         return result;
     }
@@ -45,7 +49,11 @@ public class UserController {
         }
 
         ResponseEntity<Object> result = userClient.getUserDto(id);
-        lastAction = new UserAction(Actions.GET, result, id, null);
+        lastAction = UserAction.builder()
+                .action(Actions.GET)
+                .lastResponse(result)
+                .id(id)
+                .build();
 
         return result;
     }
@@ -53,7 +61,11 @@ public class UserController {
     @PostMapping()
     public ResponseEntity<Object> postUserDto(@RequestBody @Valid UserDto userDto) {
         ResponseEntity<Object> result = userClient.postUserDto(userDto);
-        lastAction = new UserAction(Actions.POST, result, 0L, userDto);
+        lastAction = UserAction.builder()
+                .action(Actions.POST)
+                .lastResponse(result)
+                .userDto(userDto)
+                .build();
 
         return result;
     }
@@ -69,7 +81,12 @@ public class UserController {
         }
 
         ResponseEntity<Object> result = userClient.patchUserDto(id, userDto);
-        lastAction = new UserAction(Actions.PATCH, result, id, userDto);
+        lastAction = UserAction.builder()
+                .action(Actions.PATCH)
+                .lastResponse(result)
+                .userDto(userDto)
+                .id(id)
+                .build();
 
         return result;
     }
@@ -84,7 +101,12 @@ public class UserController {
         }
 
         ResponseEntity<Object> result = userClient.deleteUserDto(id);
-        lastAction = new UserAction(Actions.DELETE, result, id, null);
+
+        lastAction = UserAction.builder()
+                .action(Actions.DELETE)
+                .lastResponse(result)
+                .id(id)
+                .build();
 
         return result;
     }
