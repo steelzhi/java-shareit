@@ -17,7 +17,6 @@ import ru.practicum.shareit.exception.*;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.repository.UserRepository;
-import ru.practicum.shareit.util.Pagination;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -74,7 +73,6 @@ public class BookingServiceImpl implements BookingService {
     public List<BookingDtoOutForController> getAllBookingDtosByUser(
             long userId, String bookingStatus, Integer from, Integer size) {
         checkIfUserExists(userId);
-        Pagination.checkIfPaginationParamsAreNotCorrect(from, size);
 
         List<Booking> userBookings = new ArrayList<>();
         if (from != null && size != null) {
@@ -97,7 +95,6 @@ public class BookingServiceImpl implements BookingService {
     public List<BookingDtoOutForController> getAllBookingDtosForUserItems(
             long userId, String bookingStatus, Integer from, Integer size) {
         checkIfUserExists(userId);
-        Pagination.checkIfPaginationParamsAreNotCorrect(from, size);
 
         List<Booking> itemBookings = new ArrayList<>();
         if (from != null && size != null) {

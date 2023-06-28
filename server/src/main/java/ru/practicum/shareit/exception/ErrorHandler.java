@@ -93,10 +93,4 @@ public class ErrorHandler {
     public ErrorResponse handleEmptyDescription(final EmptyDescriptionException e) {
         return new ErrorResponse("Описание запроса не может быть пустым", e.getMessage());
     }
-
-    @ExceptionHandler()
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleIncorrectPagination(final IncorrectPaginationException e) {
-        return new ErrorResponse("Параметры пагинации должны быть >= 0", e.getMessage());
-    }
 }

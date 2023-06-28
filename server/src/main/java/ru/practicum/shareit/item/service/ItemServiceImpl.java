@@ -25,7 +25,6 @@ import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
-import ru.practicum.shareit.util.Pagination;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -95,7 +94,6 @@ public class ItemServiceImpl implements ItemService {
     @Transactional(readOnly = true)
     public List<ItemDto> getAllItemsDtoByUser(long userId, Integer from, Integer size) {
         checkAndGetUserDtoIfExists(userId);
-        Pagination.checkIfPaginationParamsAreNotCorrect(from, size);
 
         List<Item> itemsList = new ArrayList<>();
         if (from != null && size != null) {
@@ -126,8 +124,6 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public List<ItemDtoForSearch> searchItemDto(String text, Integer from, Integer size) {
-        Pagination.checkIfPaginationParamsAreNotCorrect(from, size);
-
         List<Item> itemsFoundBySearch = new ArrayList<>();
         if (!text.isBlank()) {
             if (from != null && size != null) {

@@ -20,7 +20,6 @@ import ru.practicum.shareit.request.repository.ItemRequestRepository;
 import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
-import ru.practicum.shareit.util.Pagination;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -63,8 +62,6 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
     @Override
     public List<ItemRequestDto> getPagedRequestDtosMadeByOtherUsers(long userId, Integer from, Integer size) {
-        Pagination.checkIfPaginationParamsAreNotCorrect(from, size);
-
         List<ItemRequest> itemRequests = new ArrayList<>();
         if (from != null && size != null) {
             PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size, Sort.by("created").ascending());

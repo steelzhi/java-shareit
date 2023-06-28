@@ -9,6 +9,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.dto.BookItemRequestDto;
 import ru.practicum.shareit.booking.dto.BookingState;
+import ru.practicum.shareit.util.Pagination;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
@@ -28,6 +29,7 @@ public class BookingController {
                                                           @RequestParam(name = "state", defaultValue = "ALL") String bookingStatus,
                                                           @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") Integer from,
                                                           @Positive @RequestParam(name = "size", defaultValue = "10") Integer size) {
+        Pagination.checkIfPaginationParamsAreNotCorrect(from, size);
         if (bookingStatus != null) {
             BookingState state = BookingState.from(bookingStatus)
                     .orElseThrow(() -> new IllegalArgumentException("Unknown state: " + bookingStatus));
@@ -42,6 +44,7 @@ public class BookingController {
             @RequestParam(name = "state", defaultValue = "ALL") String bookingStatus,
             @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") Integer from,
             @Positive @RequestParam(name = "size", defaultValue = "10") Integer size) {
+        Pagination.checkIfPaginationParamsAreNotCorrect(from, size);
         if (bookingStatus != null) {
             BookingState state = BookingState.from(bookingStatus)
                     .orElseThrow(() -> new IllegalArgumentException("Unknown state: " + bookingStatus));
