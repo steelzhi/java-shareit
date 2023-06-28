@@ -16,13 +16,7 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @JsonIgnoreProperties({"hibernateLazyInitializer"})
 public class UserDto {
-
     private Long id;
-
-    @NotBlank
     private String name;
-
-    @Email
-    @NotNull
     private String email;
 }
