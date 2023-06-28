@@ -25,7 +25,7 @@ public class BookingController {
 
     @GetMapping
     public ResponseEntity<Object> getAllBookingDtosByUser(@RequestHeader("X-Sharer-User-Id") long userId,
-                                                          @RequestParam(name = "state", defaultValue = "all") String bookingStatus,
+                                                          @RequestParam(name = "state", defaultValue = "ALL") String bookingStatus,
                                                           @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") Integer from,
                                                           @Positive @RequestParam(name = "size", defaultValue = "10") Integer size) {
         if (bookingStatus != null) {

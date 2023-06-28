@@ -14,4 +14,10 @@ public class ErrorHandler {
     public ErrorResponse handleIllegalArgumentException(final IllegalArgumentException e) {
         return new ErrorResponse("Unknown state: UNSUPPORTED_STATUS", e.getMessage());
     }
+
+    @ExceptionHandler()
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleIncorrectPagination(final IncorrectPaginationException e) {
+        return new ErrorResponse("Параметры пагинации должны быть >= 0", e.getMessage());
+    }
 }
