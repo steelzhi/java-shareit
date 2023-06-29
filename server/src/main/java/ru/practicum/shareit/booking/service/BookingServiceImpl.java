@@ -29,7 +29,7 @@ public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
     private final ItemRepository itemRepository;
-    private final long delay = 500_000_000;
+    //private final long delay = 500_000_000;
 
     @Override
     @Transactional
@@ -116,7 +116,8 @@ public class BookingServiceImpl implements BookingService {
         List<Booking> userBookingsWithDemandedStatus = new ArrayList<>();
 
         for (Booking booking : bookings) {
-            LocalDateTime now = LocalDateTime.now().minusNanos(delay);
+            //LocalDateTime now = LocalDateTime.now().minusNanos(delay);
+            LocalDateTime now = LocalDateTime.now();
 
             switch (bookingStatus) {
                 case CURRENT:

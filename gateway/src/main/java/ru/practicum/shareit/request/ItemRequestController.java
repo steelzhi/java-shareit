@@ -80,7 +80,8 @@ public class ItemRequestController {
     }
 
     @GetMapping("{requestId}")
-    public ResponseEntity<Object> getRequestDto(@RequestHeader("X-Sharer-User-Id") long userId, @PathVariable long requestId) {
+    public ResponseEntity<Object> getRequestDto(@RequestHeader("X-Sharer-User-Id") long userId,
+                                                @PathVariable long requestId) {
         if (lastAction != null) {
             if (lastAction.getAction().equals(Actions.GET)
                     && lastAction.getUserId() == userId

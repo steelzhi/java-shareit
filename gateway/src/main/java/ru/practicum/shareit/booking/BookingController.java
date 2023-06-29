@@ -26,10 +26,11 @@ public class BookingController {
     private BookingAction lastAction;
 
     @GetMapping
-    public ResponseEntity<Object> getAllBookingDtosByUser(@RequestHeader("X-Sharer-User-Id") long userId,
-                                                          @RequestParam(name = "state", defaultValue = "ALL") String bookingStatus,
-                                                          @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") Integer from,
-                                                          @Positive @RequestParam(name = "size", defaultValue = "10") Integer size) {
+    public ResponseEntity<Object> getAllBookingDtosByUser(
+            @RequestHeader("X-Sharer-User-Id") long userId,
+            @RequestParam(name = "state", defaultValue = "ALL") String bookingStatus,
+            @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") Integer from,
+            @Positive @RequestParam(name = "size", defaultValue = "10") Integer size) {
         Pagination.checkIfPaginationParamsAreNotCorrect(from, size);
 
         BookingState state = BookingState.from(bookingStatus)
@@ -39,8 +40,8 @@ public class BookingController {
             if (lastAction.getAction().equals(Actions.GET)
                     && lastAction.getUserId() == userId
                     && lastAction.getBookingStatus().equals(bookingStatus)
-                    && lastAction.getFrom().equals(from)
-                    && lastAction.getSize().equals(size)) {
+                    && from.equals(lastAction.getFrom())
+                    && size.equals(lastAction.getSize())) {
                 return lastAction.getLastResponse();
             }
         }
@@ -74,8 +75,8 @@ public class BookingController {
             if (lastAction.getAction().equals(Actions.GET)
                     && lastAction.getOwnerId() == userId
                     && lastAction.getBookingStatus().equals(bookingStatus)
-                    && lastAction.getFrom().equals(from)
-                    && lastAction.getSize().equals(size)) {
+                    && from.equals(lastAction.getFrom())
+                    && size.equals(lastAction.getSize())) {
                 return lastAction.getLastResponse();
             }
         }

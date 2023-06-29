@@ -74,7 +74,7 @@ public class UserController {
     public ResponseEntity<Object> patchUserDto(@PathVariable long id, @RequestBody UserDto userDto) {
         if (lastAction != null) {
             if (lastAction.getAction().equals(Actions.PATCH)
-                    && lastAction.getUserDto().equals(userDto)
+                    && userDto.equals(lastAction.getUserDto())
                     && lastAction.getId() == id) {
                 return lastAction.getLastResponse();
             }

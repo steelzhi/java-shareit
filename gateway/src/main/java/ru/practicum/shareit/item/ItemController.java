@@ -24,7 +24,8 @@ public class ItemController {
     private ItemAction lastAction;
 
     @PostMapping
-    public ResponseEntity<Object> postItemDto(@Valid @RequestBody ItemDto itemDto, @RequestHeader("X-Sharer-User-Id") long userId) {
+    public ResponseEntity<Object> postItemDto(@Valid @RequestBody ItemDto itemDto,
+                                              @RequestHeader("X-Sharer-User-Id") long userId) {
         ResponseEntity<Object> result = itemClient.postItemDto(itemDto, userId);
         lastAction = ItemAction.builder()
                 .action(Actions.POST)
@@ -43,7 +44,7 @@ public class ItemController {
         if (lastAction != null) {
             if (lastAction.getAction().equals(Actions.PATCH)
                     && lastAction.getItemId() == itemId
-                    && lastAction.getItemDto().equals(itemDto)
+                    && itemDto.equals(lastAction.getItemDto())
                     && lastAction.getUserId() == userId) {
                 return lastAction.getLastResponse();
             }
@@ -92,8 +93,8 @@ public class ItemController {
         if (lastAction != null) {
             if (lastAction.getAction().equals(Actions.GET)
                     && lastAction.getUserId() == userId
-                    && lastAction.getFrom().equals(from)
-                    && lastAction.getSize().equals(size)) {
+                    && from.equals(lastAction.getFrom())
+                    && size.equals(lastAction.getSize())) {
                 return lastAction.getLastResponse();
             }
         }
@@ -119,8 +120,8 @@ public class ItemController {
         if (lastAction != null) {
             if (lastAction.getAction().equals(Actions.GET)
                     && text.equals(lastAction.getText())
-                    && lastAction.getFrom().equals(from)
-                    && lastAction.getSize().equals(size)) {
+                    && from.equals(lastAction.getFrom())
+                    && size.equals(lastAction.getSize())) {
                 return lastAction.getLastResponse();
             }
         }
