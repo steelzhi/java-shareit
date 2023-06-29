@@ -8,7 +8,6 @@ import ru.practicum.shareit.booking.status.BookingStatus;
 import ru.practicum.shareit.item.dto.ItemDtoForSearch;
 import ru.practicum.shareit.user.dto.UserDto;
 
-import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 @Data
