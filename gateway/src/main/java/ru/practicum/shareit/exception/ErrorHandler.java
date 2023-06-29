@@ -19,4 +19,10 @@ public class ErrorHandler {
     public ErrorResponse handleIncorrectPagination(final IncorrectPaginationException e) {
         return new ErrorResponse("Параметры пагинации должны быть >= 0", e.getMessage());
     }
+
+    @ExceptionHandler()
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleDuplicateStatus(final DuplicateStatusExceptionInController e) {
+        return new ErrorResponse("Данный статус уже установлен", e.getMessage());
+    }
 }
