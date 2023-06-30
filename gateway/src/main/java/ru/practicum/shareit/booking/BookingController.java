@@ -26,7 +26,7 @@ public class BookingController {
     private BookingAction lastAction;
 
     @GetMapping
-    public ResponseEntity<Object> getAllBookingDtosByUser(
+    public ResponseEntity<Object> getAllBookingsByUser(
             @RequestHeader("X-Sharer-User-Id") long userId,
             @RequestParam(name = "state", defaultValue = "ALL") String bookingStatus,
             @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") Integer from,
@@ -46,7 +46,7 @@ public class BookingController {
             }
         }
 
-        ResponseEntity<Object> result = bookingClient.getAllBookingDtosByUser(userId, state, from, size);
+        ResponseEntity<Object> result = bookingClient.getAllBookingsByUser(userId, state, from, size);
         lastAction = BookingAction.builder()
                 .action(Actions.GET)
                 .lastResponse(result)
@@ -61,7 +61,7 @@ public class BookingController {
     }
 
     @GetMapping("/owner")
-    public ResponseEntity<Object> getAllBookingDtosForUserItems(
+    public ResponseEntity<Object> getAllBookingsForUserItems(
             @RequestHeader("X-Sharer-User-Id") long userId,
             @RequestParam(name = "state", defaultValue = "ALL") String bookingStatus,
             @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") Integer from,
@@ -81,7 +81,7 @@ public class BookingController {
             }
         }
 
-        ResponseEntity<Object> result = bookingClient.getAllBookingDtosForUserItems(userId, state, from, size);
+        ResponseEntity<Object> result = bookingClient.getAllBookingsForUserItems(userId, state, from, size);
         lastAction = BookingAction.builder()
                 .action(Actions.GET)
                 .lastResponse(result)
@@ -133,7 +133,7 @@ public class BookingController {
     }
 
     @PatchMapping("/{bookingId}")
-    public ResponseEntity<Object> patchBookingDtoWithUpdatedStatus(@PathVariable long bookingId,
+    public ResponseEntity<Object> patchBookingWithUpdatedStatus(@PathVariable long bookingId,
                                                                    @RequestParam("approved") Boolean approved,
                                                                    @RequestHeader("X-Sharer-User-Id") long userId) {
         if (lastAction != null) {
@@ -145,7 +145,7 @@ public class BookingController {
             }
         }
 
-        ResponseEntity<Object> result = bookingClient.patchBookingDtoWithUpdatedStatus(bookingId, approved, userId);
+        ResponseEntity<Object> result = bookingClient.patchBookingWithUpdatedStatus(bookingId, approved, userId);
         lastAction = BookingAction.builder()
                 .action(Actions.PATCH)
                 .lastResponse(result)

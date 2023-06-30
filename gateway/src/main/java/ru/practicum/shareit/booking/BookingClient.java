@@ -28,7 +28,7 @@ public class BookingClient extends BaseClient {
         );
     }
 
-    public ResponseEntity<Object> getAllBookingDtosByUser(long userId, BookingState state, Integer from, Integer size) {
+    public ResponseEntity<Object> getAllBookingsByUser(long userId, BookingState state, Integer from, Integer size) {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("state", state.name());
         parameters.put("from", from);
@@ -37,7 +37,7 @@ public class BookingClient extends BaseClient {
 
     }
 
-    public ResponseEntity<Object> getAllBookingDtosForUserItems(
+    public ResponseEntity<Object> getAllBookingsForUserItems(
             long userId, BookingState state, Integer from, Integer size) {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("state", state.name());
@@ -54,7 +54,7 @@ public class BookingClient extends BaseClient {
         return get("/" + bookingId, userId);
     }
 
-    public ResponseEntity<Object> patchBookingDtoWithUpdatedStatus(long bookingId, Boolean approved, long userId) {
+    public ResponseEntity<Object> patchBookingWithUpdatedStatus(long bookingId, Boolean approved, long userId) {
         return patch("/" + bookingId + "?approved=" + approved, userId);
     }
 }

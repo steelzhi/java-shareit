@@ -32,19 +32,19 @@ public class UserClient extends BaseClient {
         return get("");
     }
 
-    public ResponseEntity<Object> getUserDto(@PathVariable long id) {
+    public ResponseEntity<Object> getUser(@PathVariable long id) {
         return get("/" + id);
     }
 
-    public ResponseEntity<Object> postUserDto(@RequestBody @Valid UserDto userDto) {
-        return post("", 0, userDto);
+    public ResponseEntity<Object> postUser(@RequestBody @Valid UserDto userDto) {
+        return post("", userDto);
     }
 
-    public ResponseEntity<Object> patchUserDto(long id, UserDto userDto) {
+    public ResponseEntity<Object> patchUser(long id, UserDto userDto) {
         return patch("/" + id, userDto);
     }
 
-    public ResponseEntity<Object> deleteUserDto(long userDtoId) {
+    public ResponseEntity<Object> deleteUser(long userDtoId) {
         return delete("/" + userDtoId);
     }
 }

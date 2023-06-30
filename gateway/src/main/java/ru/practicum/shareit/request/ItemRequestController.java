@@ -16,9 +16,9 @@ public class ItemRequestController {
     private ItemRequestAction lastAction;
 
     @PostMapping
-    public ResponseEntity<Object> postItemRequestDto(@RequestHeader("X-Sharer-User-Id") long userId,
+    public ResponseEntity<Object> postItemRequest(@RequestHeader("X-Sharer-User-Id") long userId,
                                                      @RequestBody ItemRequestDto itemRequestDto) {
-        ResponseEntity<Object> result = itemRequestClient.postItemRequestDto(userId, itemRequestDto);
+        ResponseEntity<Object> result = itemRequestClient.postItemRequest(userId, itemRequestDto);
         lastAction = ItemRequestAction.builder()
                 .action(Actions.POST)
                 .lastResponse(result)
@@ -30,7 +30,7 @@ public class ItemRequestController {
     }
 
     @GetMapping
-    public ResponseEntity<Object> getAllRequestDtosMadeByRequester(@RequestHeader("X-Sharer-User-Id") long userId) {
+    public ResponseEntity<Object> getAllRequestsMadeByRequester(@RequestHeader("X-Sharer-User-Id") long userId) {
         if (lastAction != null) {
             if (lastAction.getAction().equals(Actions.GET)
                     && lastAction.getRequesterId() == userId
@@ -41,7 +41,7 @@ public class ItemRequestController {
             }
         }
 
-        ResponseEntity<Object> result = itemRequestClient.getAllRequestDtosMadeByRequester(userId);
+        ResponseEntity<Object> result = itemRequestClient.getAllRequestsMadeByRequester(userId);
         lastAction = ItemRequestAction.builder()
                 .action(Actions.GET)
                 .lastResponse(result)
@@ -67,7 +67,7 @@ public class ItemRequestController {
             }
         }
 
-        ResponseEntity<Object> result = itemRequestClient.getPagedRequestDtosMadeByOtherUsers(userId, from, size);
+        ResponseEntity<Object> result = itemRequestClient.getPagedRequestsMadeByOtherUsers(userId, from, size);
         lastAction = ItemRequestAction.builder()
                 .action(Actions.GET)
                 .lastResponse(result)
@@ -80,7 +80,7 @@ public class ItemRequestController {
     }
 
     @GetMapping("{requestId}")
-    public ResponseEntity<Object> getRequestDto(@RequestHeader("X-Sharer-User-Id") long userId,
+    public ResponseEntity<Object> getRequest(@RequestHeader("X-Sharer-User-Id") long userId,
                                                 @PathVariable long requestId) {
         if (lastAction != null) {
             if (lastAction.getAction().equals(Actions.GET)
@@ -90,7 +90,7 @@ public class ItemRequestController {
             }
         }
 
-        ResponseEntity<Object> result = itemRequestClient.getRequestDto(userId, requestId);
+        ResponseEntity<Object> result = itemRequestClient.getRequest(userId, requestId);
         lastAction = ItemRequestAction.builder()
                 .action(Actions.GET)
                 .lastResponse(result)

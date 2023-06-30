@@ -1,8 +1,8 @@
 package ru.practicum.shareit.booking.mapper;
 
-import ru.practicum.shareit.booking.dto.BookingDtoIn;
-import ru.practicum.shareit.booking.dto.BookingDtoOutForController;
-import ru.practicum.shareit.booking.dto.BookingDtoOutForItemDto;
+import ru.practicum.shareit.booking.dto.BookingDtoRequest;
+import ru.practicum.shareit.booking.dto.BookingDtoResponseForController;
+import ru.practicum.shareit.booking.dto.BookingDtoResponseForItemDto;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
@@ -16,7 +16,7 @@ public class BookingMapper {
     private BookingMapper() {
     }
 
-    public static Booking mapToBooking(BookingDtoIn bookingDto, Item item, User booker) {
+    public static Booking mapToBooking(BookingDtoRequest bookingDto, Item item, User booker) {
         Booking booking = null;
         if (bookingDto != null) {
             booking = new Booking(bookingDto.getId(),
@@ -30,10 +30,10 @@ public class BookingMapper {
         return booking;
     }
 
-    public static BookingDtoOutForController mapToBookingDtoOutForController(Booking booking) {
-        BookingDtoOutForController bookingDtoOutForController = null;
+    public static BookingDtoResponseForController mapToBookingDtoOutForController(Booking booking) {
+        BookingDtoResponseForController bookingDtoOutForController = null;
         if (booking != null) {
-            bookingDtoOutForController = new BookingDtoOutForController(booking.getId(),
+            bookingDtoOutForController = new BookingDtoResponseForController(booking.getId(),
                     booking.getStart(),
                     booking.getEnd(),
                     ItemMapper.mapToItemDtoForSearch(booking.getItem()),
@@ -44,10 +44,10 @@ public class BookingMapper {
     }
 
 
-    public static BookingDtoOutForItemDto mapToBookingDtoOutForItemDto(Booking booking) {
-        BookingDtoOutForItemDto bookingDtoOutForItemDto = null;
+    public static BookingDtoResponseForItemDto mapToBookingDtoOutForItemDto(Booking booking) {
+        BookingDtoResponseForItemDto bookingDtoOutForItemDto = null;
         if (booking != null) {
-            bookingDtoOutForItemDto = new BookingDtoOutForItemDto(booking.getId(),
+            bookingDtoOutForItemDto = new BookingDtoResponseForItemDto(booking.getId(),
                     booking.getStart(),
                     booking.getEnd(),
                     ItemMapper.mapToItemDtoForSearch(booking.getItem()),
@@ -58,7 +58,7 @@ public class BookingMapper {
     }
 
 
-    public static List<BookingDtoOutForController> mapToBookingDtoOutForController(List<Booking> bookings) {
+    public static List<BookingDtoResponseForController> mapToBookingDtoOutForController(List<Booking> bookings) {
         if (bookings != null) {
             return bookings.stream()
                     .map(booking -> mapToBookingDtoOutForController(booking))
@@ -68,7 +68,7 @@ public class BookingMapper {
         }
     }
 
-    public static List<BookingDtoOutForItemDto> mapToBookingDtoOutForItemDto(List<Booking> bookings) {
+    public static List<BookingDtoResponseForItemDto> mapToBookingDtoOutForItemDto(List<Booking> bookings) {
         if (bookings != null) {
             return bookings.stream()
                     .map(booking -> mapToBookingDtoOutForItemDto(booking))

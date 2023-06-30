@@ -6,7 +6,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.shareit.booking.dto.BookingDtoOutForItemDto;
+import ru.practicum.shareit.booking.dto.BookingDtoResponseForItemDto;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
@@ -200,12 +200,12 @@ public class ItemServiceImpl implements ItemService {
 
     @Transactional(readOnly = true)
     private ItemDto getItemDtoWithBookingsAndComments(Item item, long userId) {
-        List<BookingDtoOutForItemDto> ownersBookings = BookingMapper.mapToBookingDtoOutForItemDto(
+        List<BookingDtoResponseForItemDto> ownersBookings = BookingMapper.mapToBookingDtoOutForItemDto(
                 bookingRepository.getAllBookingsByOwner_IdAndItem_Id(userId, item.getId()));
-        List<BookingDtoOutForItemDto> pastBookings = new ArrayList<>();
-        List<BookingDtoOutForItemDto> futureBookings = new ArrayList<>();
+        List<BookingDtoResponseForItemDto> pastBookings = new ArrayList<>();
+        List<BookingDtoResponseForItemDto> futureBookings = new ArrayList<>();
         LocalDateTime now = LocalDateTime.now();
-        for (BookingDtoOutForItemDto bookingDto : ownersBookings) {
+        for (BookingDtoResponseForItemDto bookingDto : ownersBookings) {
             if ((bookingDto.getEnd().isBefore(now) && bookingDto.getStatus() != BookingStatus.REJECTED)
                     || (bookingDto.getStart().isBefore(now) && bookingDto.getEnd().isAfter(now)
                     && bookingDto.getStatus() == BookingStatus.APPROVED)) {
@@ -215,8 +215,8 @@ public class ItemServiceImpl implements ItemService {
                 futureBookings.add(bookingDto);
             }
         }
-        BookingDtoOutForItemDto lastBookingDto = null;
-        BookingDtoOutForItemDto nextBookingDto = null;
+        BookingDtoResponseForItemDto lastBookingDto = null;
+        BookingDtoResponseForItemDto nextBookingDto = null;
 
         if (isUserOwnerOfItem(item.getId(), userId)) {
             if (!pastBookings.isEmpty()) {

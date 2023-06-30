@@ -14,13 +14,13 @@ public class ItemRequestController {
     private final ItemRequestService itemRequestService;
 
     @PostMapping
-    public ItemRequestDto postItemRequestDto(@RequestHeader("X-Sharer-User-Id") long userId,
+    public ItemRequestDto postItemRequest(@RequestHeader("X-Sharer-User-Id") long userId,
                                              @RequestBody ItemRequestDto itemRequestDto) {
         return itemRequestService.postItemRequestDto(userId, itemRequestDto);
     }
 
     @GetMapping
-    public List<ItemRequestDto> getAllRequestDtosMadeByRequester(@RequestHeader("X-Sharer-User-Id") long userId) {
+    public List<ItemRequestDto> getAllRequestsMadeByRequester(@RequestHeader("X-Sharer-User-Id") long userId) {
         return itemRequestService.getAllRequestDtosMadeByRequester(userId);
     }
 
@@ -33,7 +33,7 @@ public class ItemRequestController {
     }
 
     @GetMapping("{requestId}")
-    public ItemRequestDto getRequestDto(@RequestHeader("X-Sharer-User-Id") long userId, @PathVariable long requestId) {
+    public ItemRequestDto getRequest(@RequestHeader("X-Sharer-User-Id") long userId, @PathVariable long requestId) {
         return itemRequestService.getRequestDto(userId, requestId);
     }
 }

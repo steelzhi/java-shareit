@@ -18,39 +18,39 @@ public class ItemController {
     private final ItemService itemService;
 
     @PostMapping
-    public ItemDto postItemDto(@Valid @RequestBody ItemDto itemDto, @RequestHeader("X-Sharer-User-Id") long userId) {
+    public ItemDto postItem(@RequestBody ItemDto itemDto, @RequestHeader("X-Sharer-User-Id") long userId) {
         return itemService.postItemDto(itemDto, userId);
     }
 
     @PatchMapping("/{itemId}")
-    public ItemDto patchItemDto(@PathVariable long itemId,
+    public ItemDto patchItem(@PathVariable long itemId,
                                 @RequestBody ItemDto itemDto,
                                 @RequestHeader("X-Sharer-User-Id") long userId) {
         return itemService.patchItemDto(itemId, itemDto, userId);
     }
 
     @GetMapping("/{itemId}")
-    public ItemDto getItemDtoById(@PathVariable long itemId,
+    public ItemDto getItemById(@PathVariable long itemId,
                                   @RequestHeader("X-Sharer-User-Id") long userId) {
         return itemService.getItemDtoById(itemId, userId);
     }
 
     @GetMapping
-    public List<ItemDto> getAllItemsDtoByUser(@RequestHeader("X-Sharer-User-Id") long userId,
+    public List<ItemDto> getAllItemByUser(@RequestHeader("X-Sharer-User-Id") long userId,
                                               @RequestParam(value = "from", required = false) Integer from,
                                               @RequestParam(value = "size", required = false) Integer size) {
         return itemService.getAllItemsDtoByUser(userId, from, size);
     }
 
     @GetMapping("/search")
-    public List<ItemDtoForSearch> searchItemDto(@PathParam("text") String text,
+    public List<ItemDtoForSearch> searchItem(@PathParam("text") String text,
                                                 @RequestParam(value = "from", required = false) Integer from,
                                                 @RequestParam(value = "size", required = false) Integer size) {
         return itemService.searchItemDto(text, from, size);
     }
 
     @PostMapping("/{itemId}/comment")
-    public CommentDto postCommentDto(@PathVariable long itemId,
+    public CommentDto postComment(@PathVariable long itemId,
                                      @RequestBody CommentDto commentDto,
                                      @RequestHeader("X-Sharer-User-Id") long userId) {
         return itemService.postCommentDto(itemId, commentDto, userId);

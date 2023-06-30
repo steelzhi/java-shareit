@@ -30,17 +30,17 @@ public class ItemRequestClient extends BaseClient {
     }
 
     @PostMapping
-    public ResponseEntity<Object> postItemRequestDto(long userId, ItemRequestDto itemRequestDto) {
+    public ResponseEntity<Object> postItemRequest(long userId, ItemRequestDto itemRequestDto) {
         return post("", userId, itemRequestDto);
     }
 
     @GetMapping
-    public ResponseEntity<Object> getAllRequestDtosMadeByRequester(long userId) {
+    public ResponseEntity<Object> getAllRequestsMadeByRequester(long userId) {
         return get("", userId);
     }
 
     @GetMapping("/all")
-    public ResponseEntity<Object> getPagedRequestDtosMadeByOtherUsers(long userId, Integer from, Integer size) {
+    public ResponseEntity<Object> getPagedRequestsMadeByOtherUsers(long userId, Integer from, Integer size) {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("from", from);
         parameters.put("size", size);
@@ -48,7 +48,7 @@ public class ItemRequestClient extends BaseClient {
     }
 
     @GetMapping("{requestId}")
-    public ResponseEntity<Object> getRequestDto(long userId, long requestId) {
+    public ResponseEntity<Object> getRequest(long userId, long requestId) {
         return get("/" + requestId, userId);
     }
 }

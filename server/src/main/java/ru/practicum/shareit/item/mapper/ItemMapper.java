@@ -1,6 +1,6 @@
 package ru.practicum.shareit.item.mapper;
 
-import ru.practicum.shareit.booking.dto.BookingDtoOutForItemDto;
+import ru.practicum.shareit.booking.dto.BookingDtoResponseForItemDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemDtoForSearch;
 import ru.practicum.shareit.item.model.Comment;
@@ -16,8 +16,8 @@ public class ItemMapper {
 
     public static ItemDto mapToItemDto(
             Item item,
-            BookingDtoOutForItemDto lastBookingDto,
-            BookingDtoOutForItemDto nextBookingDto,
+            BookingDtoResponseForItemDto lastBookingDto,
+            BookingDtoResponseForItemDto nextBookingDto,
             List<Comment> comments) {
         ItemDto itemDto = null;
         if (item != null) {

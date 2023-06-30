@@ -19,22 +19,22 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public UserDto getUserDto(@PathVariable long id) {
+    public UserDto getUser(@PathVariable long id) {
         return userService.getUserDto(id);
     }
 
     @PostMapping()
-    public UserDto postUserDto(@RequestBody UserDto userDto) {
+    public UserDto postUser(@RequestBody UserDto userDto) {
         return userService.postUserDto(userDto);
     }
 
     @PatchMapping("/{id}")
-    public UserDto patchUserDto(@PathVariable long id, @RequestBody UserDto userDto) {
+    public UserDto patchUser(@PathVariable long id, @RequestBody UserDto userDto) {
         return userService.patchUserDto(id, userDto);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteUserDto(@PathVariable long id) {
+    public void deleteUser(@PathVariable long id) {
         userService.deleteUserDto(id);
     }
 }

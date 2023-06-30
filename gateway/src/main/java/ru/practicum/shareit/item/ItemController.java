@@ -24,9 +24,9 @@ public class ItemController {
     private ItemAction lastAction;
 
     @PostMapping
-    public ResponseEntity<Object> postItemDto(@Valid @RequestBody ItemDto itemDto,
+    public ResponseEntity<Object> postItem(@Valid @RequestBody ItemDto itemDto,
                                               @RequestHeader("X-Sharer-User-Id") long userId) {
-        ResponseEntity<Object> result = itemClient.postItemDto(itemDto, userId);
+        ResponseEntity<Object> result = itemClient.postItem(itemDto, userId);
         lastAction = ItemAction.builder()
                 .action(Actions.POST)
                 .lastResponse(result)
@@ -38,7 +38,7 @@ public class ItemController {
     }
 
     @PatchMapping("/{itemId}")
-    public ResponseEntity<Object> patchItemDto(@PathVariable long itemId,
+    public ResponseEntity<Object> patchItem(@PathVariable long itemId,
                                                @RequestBody ItemDto itemDto,
                                                @RequestHeader("X-Sharer-User-Id") long userId) {
         if (lastAction != null) {
@@ -50,7 +50,7 @@ public class ItemController {
             }
         }
 
-        ResponseEntity<Object> result = itemClient.patchItemDto(itemId, itemDto, userId);
+        ResponseEntity<Object> result = itemClient.patchItem(itemId, itemDto, userId);
         lastAction = ItemAction.builder()
                 .action(Actions.PATCH)
                 .lastResponse(result)
@@ -63,7 +63,7 @@ public class ItemController {
     }
 
     @GetMapping("/{itemId}")
-    public ResponseEntity<Object> getItemDtoById(@PathVariable long itemId,
+    public ResponseEntity<Object> getItemById(@PathVariable long itemId,
                                                  @RequestHeader("X-Sharer-User-Id") long userId) {
         if (lastAction != null) {
             if (lastAction.getAction().equals(Actions.GET)
@@ -73,7 +73,7 @@ public class ItemController {
             }
         }
 
-        ResponseEntity<Object> result = itemClient.getItemDtoById(itemId, userId);
+        ResponseEntity<Object> result = itemClient.getItemById(itemId, userId);
         lastAction = ItemAction.builder()
                 .action(Actions.GET)
                 .lastResponse(result)
@@ -85,7 +85,7 @@ public class ItemController {
     }
 
     @GetMapping
-    public ResponseEntity<Object> getAllItemsDtoByUser(@RequestHeader("X-Sharer-User-Id") long userId,
+    public ResponseEntity<Object> getAllItemsByUser(@RequestHeader("X-Sharer-User-Id") long userId,
                                                        @RequestParam(value = "from", required = false) Integer from,
                                                        @RequestParam(value = "size", required = false) Integer size) {
         Pagination.checkIfPaginationParamsAreNotCorrect(from, size);
@@ -99,7 +99,7 @@ public class ItemController {
             }
         }
 
-        ResponseEntity<Object> result = itemClient.getAllItemsDtoByUser(userId, from, size);
+        ResponseEntity<Object> result = itemClient.getAllItemsByUser(userId, from, size);
         lastAction = ItemAction.builder()
                 .action(Actions.GET)
                 .lastResponse(result)
@@ -112,7 +112,7 @@ public class ItemController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<Object> searchItemDto(@PathParam("text") String text,
+    public ResponseEntity<Object> searchItem(@PathParam("text") String text,
                                                 @RequestParam(value = "from", required = false) Integer from,
                                                 @RequestParam(value = "size", required = false) Integer size) {
         Pagination.checkIfPaginationParamsAreNotCorrect(from, size);
@@ -126,7 +126,7 @@ public class ItemController {
             }
         }
 
-        ResponseEntity<Object> result = itemClient.searchItemDto(text, from, size);
+        ResponseEntity<Object> result = itemClient.searchItem(text, from, size);
         lastAction = ItemAction.builder()
                 .action(Actions.GET)
                 .lastResponse(result)
@@ -139,9 +139,9 @@ public class ItemController {
     }
 
     @PostMapping("/{itemId}/comment")
-    public ResponseEntity<Object> postCommentDto(@PathVariable long itemId,
+    public ResponseEntity<Object> postComment(@PathVariable long itemId,
                                                  @RequestBody CommentDto commentDto,
                                                  @RequestHeader("X-Sharer-User-Id") long userId) {
-        return itemClient.postCommentDto(itemId, commentDto, userId);
+        return itemClient.postComment(itemId, commentDto, userId);
     }
 }

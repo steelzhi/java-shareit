@@ -2,8 +2,8 @@ package ru.practicum.shareit.booking.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.booking.dto.BookingDtoIn;
-import ru.practicum.shareit.booking.dto.BookingDtoOutForController;
+import ru.practicum.shareit.booking.dto.BookingDtoRequest;
+import ru.practicum.shareit.booking.dto.BookingDtoResponseForController;
 import ru.practicum.shareit.booking.service.BookingService;
 import ru.practicum.shareit.booking.status.BookingStatus;
 
@@ -17,27 +17,28 @@ public class BookingController {
     private final BookingService bookingService;
 
     @PostMapping
-    public BookingDtoOutForController createBookingDto(@RequestBody BookingDtoIn bookingDto,
-                                                       @RequestHeader("X-Sharer-User-Id") long userId) {
+    public BookingDtoResponseForController createBooking(@RequestBody BookingDtoRequest bookingDto,
+                                                         @RequestHeader("X-Sharer-User-Id") long userId) {
         return bookingService.createBookingDto(bookingDto, userId);
     }
 
     @PatchMapping("/{bookingId}")
-    public BookingDtoOutForController patchBookingDtoWithUpdatedStatus(@PathVariable long bookingId,
-                                                                       @RequestParam("approved") Boolean approved,
-                                                                       @RequestHeader("X-Sharer-User-Id") long userId) {
+    public BookingDtoResponseForController patchBookingWithUpdatedStatus(
+            @PathVariable long bookingId,
+            @RequestParam("approved") Boolean approved,
+            @RequestHeader("X-Sharer-User-Id") long userId) {
         return bookingService.patchBookingDtoWithUpdatedStatus(bookingId, userId, approved);
     }
 
     @GetMapping("/{bookingId}")
-    public BookingDtoOutForController getBookingDto(
+    public BookingDtoResponseForController getBooking(
             @PathVariable long bookingId,
             @RequestHeader("X-Sharer-User-Id") long userId) {
         return bookingService.getBookingDto(bookingId, userId);
     }
 
     @GetMapping
-    public List<BookingDtoOutForController> getAllBookingDtosByUser(
+    public List<BookingDtoResponseForController> getAllBookingsByUser(
             @RequestHeader("X-Sharer-User-Id") long userId,
             @RequestParam(name = "state", required = false) BookingStatus bookingStatus,
             @RequestParam(value = "from", required = false) Integer from,
@@ -46,7 +47,7 @@ public class BookingController {
     }
 
     @GetMapping("/owner")
-    public List<BookingDtoOutForController> getAllBookingDtosForUserItems(
+    public List<BookingDtoResponseForController> getAllBookingsForUserItems(
             @RequestHeader("X-Sharer-User-Id") long userId,
             @RequestParam(name = "state", required = false) BookingStatus bookingStatus,
             @RequestParam(value = "from", required = false) Integer from,

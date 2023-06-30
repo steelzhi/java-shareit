@@ -40,7 +40,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Object> getUserDto(@PathVariable long id) {
+    public ResponseEntity<Object> getUser(@PathVariable long id) {
         if (lastAction != null) {
             if (lastAction.getAction().equals(Actions.GET)
                     && lastAction.getId() == id) {
@@ -48,7 +48,7 @@ public class UserController {
             }
         }
 
-        ResponseEntity<Object> result = userClient.getUserDto(id);
+        ResponseEntity<Object> result = userClient.getUser(id);
         lastAction = UserAction.builder()
                 .action(Actions.GET)
                 .lastResponse(result)
@@ -59,8 +59,8 @@ public class UserController {
     }
 
     @PostMapping()
-    public ResponseEntity<Object> postUserDto(@RequestBody @Valid UserDto userDto) {
-        ResponseEntity<Object> result = userClient.postUserDto(userDto);
+    public ResponseEntity<Object> postUser(@RequestBody @Valid UserDto userDto) {
+        ResponseEntity<Object> result = userClient.postUser(userDto);
         lastAction = UserAction.builder()
                 .action(Actions.POST)
                 .lastResponse(result)
@@ -71,7 +71,7 @@ public class UserController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<Object> patchUserDto(@PathVariable long id, @RequestBody UserDto userDto) {
+    public ResponseEntity<Object> patchUser(@PathVariable long id, @RequestBody UserDto userDto) {
         if (lastAction != null) {
             if (lastAction.getAction().equals(Actions.PATCH)
                     && userDto.equals(lastAction.getUserDto())
@@ -80,7 +80,7 @@ public class UserController {
             }
         }
 
-        ResponseEntity<Object> result = userClient.patchUserDto(id, userDto);
+        ResponseEntity<Object> result = userClient.patchUser(id, userDto);
         lastAction = UserAction.builder()
                 .action(Actions.PATCH)
                 .lastResponse(result)
@@ -92,7 +92,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Object> deleteUserDto(@PathVariable long id) {
+    public ResponseEntity<Object> deleteUser(@PathVariable long id) {
         if (lastAction != null) {
             if (lastAction.getAction().equals(Actions.DELETE)
                     && lastAction.getId() == id) {
@@ -100,7 +100,7 @@ public class UserController {
             }
         }
 
-        ResponseEntity<Object> result = userClient.deleteUserDto(id);
+        ResponseEntity<Object> result = userClient.deleteUser(id);
 
         lastAction = UserAction.builder()
                 .action(Actions.DELETE)
