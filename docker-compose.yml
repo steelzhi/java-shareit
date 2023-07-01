@@ -27,3 +27,6 @@ services:
     environment:
       - POSTGRES_USER=shareit
       - POSTGRES_PASSWORD=s
+      - DB_HOST=localhost
+      - DB_PORT=5432
+      - DB_NAME=ShareIt

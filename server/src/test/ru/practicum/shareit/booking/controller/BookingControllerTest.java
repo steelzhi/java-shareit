@@ -384,21 +384,6 @@ class BookingControllerTest {
                 .getAllBookingDtosByUser(2L, BookingStatus.WAITING, 10, 50);
     }
 
-/*    @SneakyThrows
-    @Test
-    void getAllBookingsByUserWithUnsupportedStatus() {
-        Mockito.when(bookingService.getAllBookingDtosByUser(2L, "UNSUPPORTED", null, null))
-                .thenThrow(new WrongBookingStatusException("Unknown state: UNSUPPORTED_STATUS"));
-
-        mockMvc.perform(get("/bookings")
-                        .header("X-Sharer-User-Id", 2L)
-                        .param("state", "UNSUPPORTED"))
-                .andExpect(status().isBadRequest());
-
-        Mockito.verify(bookingService, Mockito.times(1))
-                .getAllBookingDtosByUser(2L, "UNSUPPORTED", null, null);
-    }*/
-
     @SneakyThrows
     @Test
     void getAllBookingsForUserItems() {

@@ -420,28 +420,6 @@ class ItemServiceImplTest {
                 .findAllByOwner_Id(2L, getPage(0, 100));
     }
 
-/*    @Test
-    void getAllItemsDtoByUserWithIncorrectPaginationParams() {
-        Item item3 = Item.builder()
-                .id(3L)
-                .name("Трос")
-                .description("Для буксировки")
-                .available(true)
-                .owner(user2)
-                .build();
-
-        Mockito.when(userRepository.findById(2L))
-                .thenReturn(Optional.of(user2));
-
-        IncorrectPaginationException incorrectPaginationException = assertThrows(IncorrectPaginationException.class,
-                () -> itemService.getAllItemsDtoByUser(2L, -1, 100));
-
-        assertEquals(incorrectPaginationException.getMessage(), "Введены некорректные параметры для пагинации");
-
-        Mockito.verify(userRepository, Mockito.times(1)).findById(2L);
-        Mockito.verify(itemRepository, Mockito.never()).findAllByOwner_Id(2L, getPage(-1, 100));
-    }*/
-
     @Test
     void searchItems() {
         Mockito.when(itemRepository.searchItems("шлифо"))

@@ -489,25 +489,6 @@ class BookingServiceImplTest {
                 .getAllBookingsForOwnerItems(2L);
     }
 
-/*    @Test
-    void getAllBookingsForUserItemsWithIncorrectStatus() {
-        Mockito.when(userRepository.findById(2L))
-                .thenReturn(Optional.of(user2));
-        Mockito.when(bookingRepository.getAllBookingsForOwnerItems(2L))
-                .thenReturn(new ArrayList<>());
-
-        WrongBookingStatusException wrongBookingStatusException = assertThrows(WrongBookingStatusException.class,
-                () -> bookingService.getAllBookingDtosForUserItems(
-                        2L, "INCORRECT STATUS", null, null));
-
-        assertThat(wrongBookingStatusException.getMessage(),
-                equalTo("Введен некорректный статус бронирования"));
-
-        Mockito.verify(userRepository, Mockito.times(1)).findById(2L);
-        Mockito.verify(bookingRepository, Mockito.times(1))
-                .getAllBookingsForOwnerItems(2L);
-    }*/
-
     @Test
     void getAllBookingsForUserItemsWithPagination() {
         Mockito.when(userRepository.findById(1L))
